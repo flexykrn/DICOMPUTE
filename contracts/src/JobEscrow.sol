@@ -219,15 +219,17 @@ contract JobEscrow is Ownable, ReentrancyGuard {
         job.state = JobState.Slashed;
 
         GPURegistry.Provider memory provider = gpuRegistry.getProvider(job.provider);
-        uint256 bounty = (provider.stake * CHALLENGE_BOUNTY_PERCENT) / 100;
-        if (bounty > provider.stake) bounty = provider.stake;
+        uint256 bounty = (job.deposit * CHALLENGE_BOUNTY_PERCENT) / 100;
 
-        gpuRegistry.slashProvider(job.provider, bounty);
+        gpuRegistry.slashProvider(job.provider, provider.stake);
         reputationSystem.recordSlash(job.provider);
 
-        // Refund user
-        (bool success, ) = payable(job.user).call{value: job.deposit}("");
-        if (!success) revert TransferFailed();
+        // Refund user minus bounty
+        uint256 userRefund = job.deposit - bounty;
+        if (userRefund > 0) {
+            (bool success, ) = payable(job.user).call{value: userRefund}("");
+            if (!success) revert TransferFailed();
+        }
 
         // Pay bounty to challenger
         if (bounty > 0) {

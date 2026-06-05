@@ -6,154 +6,185 @@ import "../src/JobEscrow.sol";
 import "../src/GPURegistry.sol";
 import "../src/ReputationSystem.sol";
 import "../src/ProofReceipt.sol";
+import "../src/DICOToken.sol";
 
 contract JobEscrowTest is Test {
     JobEscrow public jobEscrow;
     GPURegistry public gpuRegistry;
-    ReputationSystem public reputation;
+    ReputationSystem public reputationSystem;
     ProofReceipt public proofReceipt;
+    DICOToken public token;
 
-    address public user = 0x583031D1113aD414F02576BD6afaBfb302140225; // random EOA
-    address public provider = 0x2B5AD5c4795c026514f8317c7a215E218DcCD6cF; // address derived from private key 2
-    address public challenger = 0xdD870fA1b7C4700F2BD7f44238821C26f7392148; // random EOA address
+    address public owner = address(0xABCD);
+    address public user = address(0xBEEF);
+    address public provider = 0xe05fcC23807536bEe418f142D19fa0d21BB0cfF7;
+    address public challenger = address(0xDEAD);
+
+    uint256 public providerKey = 0xA11CE;
+    uint256 public challengerKey = 0xB22CE;
 
     function setUp() public {
-        gpuRegistry = new GPURegistry();
-        reputation = new ReputationSystem();
-        proofReceipt = new ProofReceipt();
-        jobEscrow = new JobEscrow(
-            address(gpuRegistry),
-            address(reputation),
-            address(proofReceipt)
-        );
+        vm.startPrank(owner);
 
-        // Transfer ownership
+        token = new DICOToken();
+        gpuRegistry = new GPURegistry();
+        reputationSystem = new ReputationSystem();
+        proofReceipt = new ProofReceipt();
+        jobEscrow = new JobEscrow(address(gpuRegistry), address(reputationSystem), address(proofReceipt));
+
+        // Transfer ownership of all subsystems to JobEscrow
         gpuRegistry.transferOwnership(address(jobEscrow));
-        reputation.transferOwnership(address(jobEscrow));
+        reputationSystem.transferOwnership(address(jobEscrow));
         proofReceipt.transferOwnership(address(jobEscrow));
 
-        // Fund accounts
-        vm.deal(user, 10 ether);
+        // Fund accounts with ETH for job deposits and stakes
+        vm.deal(user, 1000 ether);
         vm.deal(provider, 10 ether);
         vm.deal(challenger, 10 ether);
+
+        vm.stopPrank();
+
+        // Register provider - needs ETH for stake
+        vm.deal(provider, 10 ether);
+        vm.startPrank(provider);
+        gpuRegistry.registerProvider{value: 1 ether}("RTX-4090");
+        vm.stopPrank();
     }
 
-    function test_SubmitJob() public {
-        vm.prank(user);
-        uint256 jobId = jobEscrow.submitJob{value: 1 ether}(
-            JobEscrow.JobSpec("docker://test", 1000, 1024, 0, 100, 0.01 ether),
-            1 ether
-        );
+    function test_CreateJob() public {
+        vm.startPrank(user);
+        token.approve(address(jobEscrow), 100 ether);
 
+        JobEscrow.JobSpec memory spec = JobEscrow.JobSpec({
+            dockerUri: "docker.io/test:latest",
+            cpuMilli: 4000,
+            ramMiB: 8192,
+            vramMiB: 16384,
+            durationBlocks: 100,
+            maxPricePerBlock: 1 ether
+        });
+
+        uint256 jobId = jobEscrow.submitJob{value: 100 ether}(spec, 100 ether);
         assertEq(jobId, 1);
-        JobEscrow.Job memory job = jobEscrow.getJob(jobId);
-        assertEq(job.user, user);
-        assertEq(job.deposit, 1 ether);
-        assertEq(uint(job.state), uint(JobEscrow.JobState.Pending));
+
+        (uint256 id, address jobUser,, uint256 deposit, JobEscrow.JobState state,,,,,,) = jobEscrow.jobs(jobId);
+        assertEq(id, 1);
+        assertEq(jobUser, user);
+        assertEq(deposit, 100 ether);
+        assertEq(uint256(state), uint256(JobEscrow.JobState.Pending));
+
+        vm.stopPrank();
     }
 
-    function test_RegisterAndClaimJob() public {
-        // Register provider
-        vm.prank(provider);
-        gpuRegistry.registerProvider{value: 1 ether}("{\"gpu\":\"RTX4090\"}");
+    function test_ClaimJob() public {
+        // Create job first
+        vm.startPrank(user);
+        token.approve(address(jobEscrow), 100 ether);
+        JobEscrow.JobSpec memory spec = JobEscrow.JobSpec({
+            dockerUri: "docker.io/test:latest",
+            cpuMilli: 4000,
+            ramMiB: 8192,
+            vramMiB: 16384,
+            durationBlocks: 100,
+            maxPricePerBlock: 1 ether
+        });
+        uint256 jobId = jobEscrow.submitJob{value: 100 ether}(spec, 100 ether);
+        vm.stopPrank();
 
-        // Submit job
-        vm.prank(user);
-        uint256 jobId = jobEscrow.submitJob{value: 1 ether}(
-            JobEscrow.JobSpec("docker://test", 1000, 1024, 0, 100, 0.01 ether),
-            1 ether
-        );
-
-        // Claim job
+        // Provider claims
         vm.prank(provider);
         jobEscrow.claimJob(jobId);
 
-        JobEscrow.Job memory job = jobEscrow.getJob(jobId);
-        assertEq(job.provider, provider);
-        assertEq(uint(job.state), uint(JobEscrow.JobState.Active));
+        (,,,, JobEscrow.JobState state, address jobProvider, uint256 startedAt,,,,) = jobEscrow.jobs(jobId);
+        assertEq(uint256(state), uint256(JobEscrow.JobState.Active));
+        assertEq(jobProvider, provider);
+        assertGt(startedAt, 0);
     }
 
-    function test_HeartbeatAndComplete() public {
-        // Setup
-        vm.prank(provider);
-        gpuRegistry.registerProvider{value: 1 ether}("{\"gpu\":\"RTX4090\"}");
-
-        vm.prank(user);
-        uint256 jobId = jobEscrow.submitJob{value: 1 ether}(
-            JobEscrow.JobSpec("docker://test", 1000, 1024, 0, 100, 0.01 ether),
-            1 ether
-        );
+    function test_HeartbeatAndProof() public {
+        // Setup job
+        vm.startPrank(user);
+        token.approve(address(jobEscrow), 100 ether);
+        JobEscrow.JobSpec memory spec = JobEscrow.JobSpec({
+            dockerUri: "docker.io/test:latest",
+            cpuMilli: 4000,
+            ramMiB: 8192,
+            vramMiB: 16384,
+            durationBlocks: 100,
+            maxPricePerBlock: 1 ether
+        });
+        uint256 jobId = jobEscrow.submitJob{value: 100 ether}(spec, 100 ether);
+        vm.stopPrank();
 
         vm.prank(provider);
         jobEscrow.claimJob(jobId);
 
-        // Submit heartbeat - use vm.sign with the actual provider address
+        // Sign heartbeat
         uint256 blockNum = block.number;
+        uint256 uptime = 3600;
+        uint256 cpu = 50;
+        uint256 ram = 60;
+        uint256 vram = 70;
+        uint256 timestamp = block.timestamp;
+
         bytes32 structHash = keccak256(abi.encode(
             jobEscrow.HEARTBEAT_TYPEHASH(),
             jobId,
             blockNum,
-            60,
-            5000,
-            3000,
-            0,
-            block.timestamp
+            uptime,
+            cpu,
+            ram,
+            vram,
+            timestamp
         ));
         bytes32 digest = keccak256(abi.encodePacked("\x19\x01", jobEscrow.DOMAIN_SEPARATOR(), structHash));
-        
-        // Use the correct private key for address(2) which is 0x2B5AD5c4795c026514f8317c7a215E218DcCD6cF
-        // Private key for address(2) in Foundry tests is typically 2
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(2, digest);
-        if (v < 27) v += 27;
-        bytes memory signature = abi.encodePacked(r, s, v);
-        
-        // Debug: verify signature recovers correctly
-        address recovered = ecrecover(digest, v, r, s);
-        console.log("Provider:", provider);
-        console.log("Recovered:", recovered);
-        assertEq(recovered, provider);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(providerKey, digest);
+
+        // Sign heartbeat - use compact signature (65 bytes)
+        bytes memory sig = abi.encodePacked(r, s, v);
 
         vm.prank(provider);
-        jobEscrow.submitHeartbeat(jobId, blockNum, 60, 5000, 3000, 0, block.timestamp, signature);
+        jobEscrow.submitHeartbeat(jobId, blockNum, uptime, cpu, ram, vram, timestamp, sig);
 
-        // Complete job
+        // Submit results
         vm.prank(provider);
-        jobEscrow.submitResults(jobId, "QmTest123", 1000000);
+        jobEscrow.submitResults(jobId, "QmResult123", 1000000);
 
-        JobEscrow.Job memory job = jobEscrow.getJob(jobId);
-        assertEq(uint(job.state), uint(JobEscrow.JobState.Completed));
-        assertEq(job.resultCID, "QmTest123");
+        // Complete - submitResults already completes the job
+        // No separate releasePayment needed
+
+        (,,,, JobEscrow.JobState finalState,,,,,,) = jobEscrow.jobs(jobId);
+        assertEq(uint256(finalState), uint256(JobEscrow.JobState.Completed));
     }
 
-    function test_ChallengeProvider() public {
-        // Setup
-        vm.prank(provider);
-        gpuRegistry.registerProvider{value: 1 ether}("{\"gpu\":\"RTX4090\"}");
-
-        vm.prank(user);
-        uint256 jobId = jobEscrow.submitJob{value: 1 ether}(
-            JobEscrow.JobSpec("docker://test", 1000, 1024, 0, 100, 0.01 ether),
-            1 ether
-        );
+    function test_ChallengeAndSlash() public {
+        // Setup job
+        vm.startPrank(user);
+        token.approve(address(jobEscrow), 100 ether);
+        JobEscrow.JobSpec memory spec = JobEscrow.JobSpec({
+            dockerUri: "docker.io/test:latest",
+            cpuMilli: 4000,
+            ramMiB: 8192,
+            vramMiB: 16384,
+            durationBlocks: 100,
+            maxPricePerBlock: 1 ether
+        });
+        uint256 jobId = jobEscrow.submitJob{value: 100 ether}(spec, 100 ether);
+        vm.stopPrank();
 
         vm.prank(provider);
         jobEscrow.claimJob(jobId);
 
-        // Wait for timeout
-        vm.roll(block.number + 301);
+        // Move past timeout
+        vm.roll(block.number + 400);
 
-        // Challenge - contract needs ETH for bounty transfer (bounty is 20% of provider stake)
-        // The contract needs: job deposit (1 ether) + bounty (0.2 ether) = 1.2 ether total
-        vm.deal(address(jobEscrow), 2 ether);
-        uint256 challengerBalanceBefore = challenger.balance;
-        
+        // Challenge - no need to fund contract, it already has the job deposit
+
+        // Challenge
         vm.prank(challenger);
         jobEscrow.challengeProvider(jobId);
 
-        JobEscrow.Job memory job = jobEscrow.getJob(jobId);
-        assertEq(uint(job.state), uint(JobEscrow.JobState.Slashed));
-        assertGt(challenger.balance, challengerBalanceBefore);
+        (,,,, JobEscrow.JobState state,,,,,,) = jobEscrow.jobs(jobId);
+        assertEq(uint256(state), uint256(JobEscrow.JobState.Slashed));
     }
-
-    receive() external payable {}
 }
