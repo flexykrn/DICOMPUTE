@@ -114,10 +114,11 @@ class BlockchainIndexer:
         
         # Process JobSubmitted events
         try:
-            events = contract.events.JobSubmitted().get_logs(
-                fromBlock=latest_block - 10,
-                toBlock=latest_block
+            event_filter = contract.events.JobSubmitted().create_filter(
+                from_block=max(0, latest_block - 10),
+                to_block=latest_block
             )
+            events = event_filter.get_all_entries()
             for event in events:
                 self._handle_job_submitted(event)
         except Exception as e:
@@ -125,10 +126,11 @@ class BlockchainIndexer:
         
         # Process JobClaimed events
         try:
-            events = contract.events.JobClaimed().get_logs(
-                fromBlock=latest_block - 10,
-                toBlock=latest_block
+            event_filter = contract.events.JobClaimed().create_filter(
+                from_block=max(0, latest_block - 10),
+                to_block=latest_block
             )
+            events = event_filter.get_all_entries()
             for event in events:
                 self._handle_job_claimed(event)
         except Exception as e:
@@ -136,10 +138,11 @@ class BlockchainIndexer:
         
         # Process JobCompleted events
         try:
-            events = contract.events.JobCompleted().get_logs(
-                fromBlock=latest_block - 10,
-                toBlock=latest_block
+            event_filter = contract.events.JobCompleted().create_filter(
+                from_block=max(0, latest_block - 10),
+                to_block=latest_block
             )
+            events = event_filter.get_all_entries()
             for event in events:
                 self._handle_job_completed(event)
         except Exception as e:
