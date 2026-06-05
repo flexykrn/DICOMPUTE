@@ -1,5 +1,5 @@
 """
-Blockchain Event Indexer for NoCapCompute
+Blockchain Event Indexer for DICOMPUTE
 Listens to XDC Apothem smart contract events and stores in database
 """
 
@@ -9,7 +9,7 @@ from typing import Optional
 from web3 import Web3
 from sqlalchemy.orm import Session
 from database import get_db, init_db
-from models import Job, Provider
+from models import Job, Provider, Receipt
 import json
 import os
 
@@ -18,6 +18,7 @@ XDC_RPC = os.getenv("RPC_URL", "https://erpc.apothem.network")
 
 # Contract addresses (update after deployment)
 JOB_ESCROW_ADDRESS = os.getenv("JOB_ESCROW_ADDRESS", "0x2Ff9B760510fc0aAd51a59f8aDA62F8B2631a075")
+PROOF_RECEIPT_ADDRESS = os.getenv("PROOF_RECEIPT_ADDRESS", "0xb35EfE4E7071B1c7ce7f00CC7BB667cEc706DBa2")
 
 class BlockchainIndexer:
     def __init__(self):
@@ -27,25 +28,28 @@ class BlockchainIndexer:
         self.last_indexed_block = None
         self.deployment_block = 82731250
         
-        # Load ABI (placeholder - update with actual ABI)
-        self.job_escrow_abi = self._load_abi()
+        # Load ABIs - try file first, fallback to inline
+        self.job_escrow_abi = self._load_abi("JobEscrow.json") or self._load_job_escrow_fallback_abi()
+        self.proof_receipt_abi = self._load_abi("ProofReceipt.json") or self._load_proof_receipt_fallback_abi()
         
         if self.w3.is_connected():
             print(f" Connected to XDC Apothem (Block: {self.w3.eth.block_number})")
         else:
             print(" Failed to connect to XDC Apothem")
     
-    def _load_abi(self):
-        """Load JobEscrow ABI from file"""
-        abi_path = os.path.join(os.path.dirname(__file__), "contracts", "JobEscrow.json")
+    def _load_abi(self, filename: str):
+        """Load contract ABI from file"""
+        abi_path = os.path.join(os.path.dirname(__file__), "contracts", filename)
         if os.path.exists(abi_path):
             with open(abi_path) as f:
                 data = json.load(f)
                 if isinstance(data, dict) and "abi" in data:
                     return data["abi"]
                 return data
-        
-        # Minimal ABI for events
+        return None
+    
+    def _load_job_escrow_fallback_abi(self):
+        """Minimal ABI for JobEscrow events"""
         return [
             {
                 "anonymous": False,
@@ -84,6 +88,24 @@ class BlockchainIndexer:
                     {"indexed": False, "name": "instructionCount", "type": "uint256"}
                 ],
                 "name": "ResultsSubmitted",
+                "type": "event"
+            }
+        ]
+    
+    def _load_proof_receipt_fallback_abi(self):
+        """Minimal ABI for ProofReceipt events"""
+        return [
+            {
+                "anonymous": False,
+                "inputs": [
+                    {"indexed": True, "name": "tokenId", "type": "uint256"},
+                    {"indexed": True, "name": "jobId", "type": "uint256"},
+                    {"indexed": True, "name": "user", "type": "address"},
+                    {"indexed": False, "name": "provider", "type": "address"},
+                    {"indexed": False, "name": "resultCID", "type": "string"},
+                    {"indexed": False, "name": "cost", "type": "uint256"}
+                ],
+                "name": "ReceiptMinted",
                 "type": "event"
             }
         ]
@@ -133,10 +155,14 @@ class BlockchainIndexer:
         if from_block > latest_block:
             return
         
-        # Create contract instance
+        # Create contract instances
         contract = self.w3.eth.contract(
             address=Web3.to_checksum_address(JOB_ESCROW_ADDRESS),
             abi=self.job_escrow_abi
+        )
+        proof_contract = self.w3.eth.contract(
+            address=Web3.to_checksum_address(PROOF_RECEIPT_ADDRESS),
+            abi=self.proof_receipt_abi
         )
         
         # Process JobSubmitted events
@@ -186,6 +212,18 @@ class BlockchainIndexer:
                 self._handle_job_completed(event)
         except Exception as e:
             print(f"JobCompleted error: {e}")
+        
+        # Process ReceiptMinted events
+        try:
+            event_filter = proof_contract.events.ReceiptMinted().create_filter(
+                from_block=from_block,
+                to_block=latest_block
+            )
+            events = event_filter.get_all_entries()
+            for event in events:
+                self._handle_receipt_minted(event)
+        except Exception as e:
+            print(f"ReceiptMinted error: {e}")
         
         self.last_indexed_block = latest_block
     
@@ -282,6 +320,34 @@ class BlockchainIndexer:
                 job.state = "completed"
                 db.commit()
                 print(f" Job #{job_id} completed")
+        finally:
+            db.close()
+    
+    def _handle_receipt_minted(self, event):
+        """Handle ReceiptMinted event"""
+        args = event['args']
+        token_id = args['tokenId']
+        job_id = args['jobId']
+        user = args['user']
+        provider = args['provider']
+        result_cid = args.get('resultCID', '')
+        cost = args.get('cost', 0)
+        
+        db = next(get_db())
+        try:
+            existing = db.query(Receipt).filter(Receipt.token_id == token_id).first()
+            if not existing:
+                receipt = Receipt(
+                    token_id=token_id,
+                    job_id=job_id,
+                    user_address=user,
+                    provider_address=provider,
+                    result_cid=result_cid,
+                    cost=str(cost)
+                )
+                db.add(receipt)
+                db.commit()
+                print(f" Indexed receipt NFT #{token_id} for job #{job_id}")
         finally:
             db.close()
 

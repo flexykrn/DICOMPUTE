@@ -2,6 +2,7 @@
 """
 DICOMPUTE GPU Provider - Real Docker Execution with GPU Support
 Runs on provider machine, listens for jobs, executes containers, sends heartbeats
+Supports daemon mode with --daemon flag for autonomous job processing
 """
 
 import os
@@ -10,6 +11,8 @@ import time
 import json
 import signal
 import subprocess
+import threading
+import argparse
 from pathlib import Path
 from typing import Optional, Dict, Any
 
@@ -70,16 +73,10 @@ contract = w3.eth.contract(address=JOB_ESCROW_ADDRESS, abi=JOB_ESCROW_ABI)
 log_info(f"Connected to XDC Apothem: {RPC_URL}")
 log_info(f"Provider address: {provider_address}")
 
-# Check provider registration
-try:
-    gpu_registry_address = contract.functions.gpuRegistry().call()
-    log_info(f"GPURegistry: {gpu_registry_address}")
-except Exception as e:
-    log_warn(f"Could not read gpuRegistry: {e}")
-
 # Global state
 active_containers: Dict[int, Any] = {}
 running = True
+daemon_mode = False
 
 
 def get_system_stats() -> Dict[str, int]:
@@ -429,6 +426,54 @@ def process_job(job_id: int, user: str, deposit: int):
         log_error(f" Job #{job_id} failed at results submission")
 
 
+def listen_for_jobs():
+    """Listen for JobSubmitted events and auto-process them"""
+    global running
+    
+    log_info("Starting JobSubmitted event listener...")
+    
+    # Create event filter from latest block
+    try:
+        event_filter = contract.events.JobSubmitted().create_filter(from_block='latest')
+        log_info("Event filter created, polling every 5 seconds")
+    except Exception as e:
+        log_error(f"Failed to create event filter: {e}")
+        return
+    
+    while running:
+        try:
+            # Get new events
+            events = event_filter.get_new_entries()
+            
+            for event in events:
+                job_id = event['args']['jobId']
+                user = event['args']['user']
+                deposit = event['args']['deposit']
+                
+                log_info(f"Detected JobSubmitted: #{job_id} from {user[:10]}...")
+                
+                # Process job in background thread so listener keeps polling
+                if daemon_mode:
+                    job_thread = threading.Thread(
+                        target=process_job,
+                        args=(job_id, user, deposit),
+                        daemon=True
+                    )
+                    job_thread.start()
+                    log_info(f"Started background thread for job #{job_id}")
+                else:
+                    # Sequential processing
+                    process_job(job_id, user, deposit)
+            
+            time.sleep(5)  # Poll every 5 seconds
+            
+        except KeyboardInterrupt:
+            break
+        except Exception as e:
+            log_error(f"Error in listener loop: {e}")
+            time.sleep(5)
+
+
 def signal_handler(sig, frame):
     """Handle Ctrl+C gracefully"""
     global running
@@ -444,13 +489,24 @@ def signal_handler(sig, frame):
 
 def main():
     """Main provider loop"""
-    global running
+    global running, daemon_mode
+    
+    # Parse arguments
+    parser = argparse.ArgumentParser(description="DICOMPUTE GPU Provider")
+    parser.add_argument("--daemon", action="store_true", help="Run in daemon mode (auto-process jobs in background)")
+    parser.add_argument("--job-id", type=int, help="Process a specific job ID and exit")
+    parser.add_argument("--listen-only", action="store_true", help="Only listen for events, don't process")
+    args = parser.parse_args()
+    
+    daemon_mode = args.daemon
     
     # Setup signal handler
     signal.signal(signal.SIGINT, signal_handler)
     
     log_info("=" * 60)
     log_info("DICOMPUTE GPU Provider Starting...")
+    if daemon_mode:
+        log_info("MODE: DAEMON (background job processing)")
     log_info("=" * 60)
     
     # Check balance
@@ -481,31 +537,31 @@ def main():
     except Exception as e:
         log_warn(f"Could not verify registration: {e}")
     
+    # Single job mode
+    if args.job_id:
+        log_info(f"Processing single job: #{args.job_id}")
+        try:
+            job_data = contract.functions.jobs(args.job_id).call()
+            user = job_data[1]
+            deposit = job_data[6]
+            process_job(args.job_id, user, deposit)
+        except Exception as e:
+            log_error(f"Failed to process job #{args.job_id}: {e}")
+        return
+    
+    # Listen-only mode
+    if args.listen_only:
+        log_info("Listen-only mode. Waiting for events...")
+        listen_for_jobs()
+        return
+    
+    # Normal or daemon mode
     log_info("Waiting for JobSubmitted events...")
     log_info("Press Ctrl+C to exit")
     log_info("=" * 60)
     
-    # Create event filter
-    event_filter = contract.events.JobSubmitted().create_filter(from_block='latest')
-    
-    while running:
-        try:
-            events = event_filter.get_new_entries()
-            for event in events:
-                job_id = event['args']['jobId']
-                user = event['args']['user']
-                deposit = event['args']['deposit']
-                
-                # Process job in background to continue listening
-                # For MVP, we process sequentially
-                process_job(job_id, user, deposit)
-            
-            time.sleep(2)
-        except KeyboardInterrupt:
-            break
-        except Exception as e:
-            log_error(f"Error in main loop: {e}")
-            time.sleep(5)
+    # Start listener
+    listen_for_jobs()
     
     log_info("GPU Provider stopped.")
 
