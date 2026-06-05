@@ -1,27 +1,35 @@
 # DICOMPUTE MVP Demo - Use Teammate's GPU from Your Laptop
 
-This is a quick-start guide for the hackathon MVP demo where you submit a job from your laptop and a teammate's machine with a GPU executes it.
+Script-only user flow. No frontend required.
+
+You submit a job from your laptop via Python script. A teammate's machine with a GPU runs a provider daemon that listens to the blockchain, executes the Docker container, and submits results on-chain.
 
 ## Architecture
 
 ```
 Your Laptop                              Teammate's GPU Machine
 ------------                            ------------------------
-Frontend (wizard)  ----submitJob()--->  XDC Apothem Blockchain
-Backend API        <--index events--
-                   <--check status--
-                                            scripts/gpu_provider.py
-                                            (listens for JobSubmitted)
-                                            claims job -> runs Docker
-                                            submits results on-chain
+Backend API          <--index events--
+  (SQLite + FastAPI)                    scripts/gpu_provider.py
+                                        listens for JobSubmitted
+                                        claims job -> runs Docker
+                                        heartbeats -> submits results
+
+User: python test_submit_job.py
+  |
+  v
+XDC Apothem Blockchain (JobEscrow)
+  ^
+  |
+Provider: python gpu_provider.py
 ```
 
 ## Prerequisites
 
 1. XDC Apothem testnet XDC in the deployer/provider wallet
-2. Python 3.10+ with backend deps installed
-3. Docker installed on the GPU machine
-4. The provider wallet registered on GPURegistry
+2. Python 3.10+ with backend deps installed on both machines
+3. Docker installed on the GPU provider machine
+4. The provider wallet registered on `GPURegistry` with stake
 
 ## Deployed Contracts (XDC Apothem)
 
@@ -42,7 +50,7 @@ The backend will:
 - Initialize SQLite DB
 - Index blockchain events from deployment block
 - Expose REST API at `http://localhost:8001`
-- Skip local Docker scheduling if Docker is not available (designed for remote GPU providers)
+- Skip local Docker scheduling because execution is delegated to the remote GPU provider
 
 ## Step 2: Start GPU Provider (on teammate's machine with GPU + Docker)
 
@@ -52,6 +60,7 @@ Copy the repo to the GPU machine, then:
 cd scripts
 cp .env.example .env
 # Edit .env and set PROVIDER_KEY to the registered provider's private key
+# Set BACKEND_URL to point at the laptop backend if on LAN, e.g. http://192.168.1.x:8001
 python gpu_provider.py
 ```
 
@@ -59,29 +68,18 @@ The provider will:
 - Listen for `JobSubmitted` events on XDC Apothem
 - Pull the Docker image and run the container with GPU support (falls back to CPU)
 - Send on-chain heartbeats
-- Submit results and mint a Proof-of-Compute receipt NFT
+- Submit results and trigger a Proof-of-Compute receipt NFT mint
 
 ## Step 3: Submit a Job
 
-### Option A: Frontend Wizard
-
-If Next.js builds successfully:
-
-```bash
-cd client
-npm run dev
-# Open http://localhost:3000/wizard
-# Connect MetaMask, fill docker image + resources, click Submit Job
-```
-
-### Option B: Python Script (recommended for demo if npm is broken)
+From your laptop:
 
 ```bash
 cd scripts
 python test_submit_job.py
 ```
 
-This submits a `hello-world` Docker job to the JobEscrow contract.
+This submits a `hello-world` Docker job directly to the `JobEscrow` contract on XDC Apothem.
 
 ## Step 4: Watch the Flow
 
@@ -107,7 +105,7 @@ curl http://localhost:8001/api/jobs/{chain_job_id}/result
 
 - [ ] Backend API running on port 8001
 - [ ] GPU provider running on teammate's machine
-- [ ] Job submitted (via frontend or script)
+- [ ] Job submitted via `python test_submit_job.py`
 - [ ] Provider claims job on-chain
 - [ ] Container runs and finishes
 - [ ] Provider submits results
@@ -130,6 +128,5 @@ curl http://localhost:8001/api/jobs/{chain_job_id}/result
 - Verify `backend/contracts/JobEscrow.json` exists with full ABI
 - The indexer scans from block `82731250` (deployment block) on first start
 
-### Frontend won't build
-- The project requires Node 20 / npm 10. Node 24/npm 11 has semver conflicts with `@wagmi/connectors`.
-- Use the Python script `scripts/test_submit_job.py` as fallback for the demo.
+### Provider script crashes with UnicodeEncodeError
+- This was fixed by removing emojis. Pull latest `main`.
