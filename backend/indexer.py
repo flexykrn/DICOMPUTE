@@ -14,10 +14,10 @@ import json
 import os
 
 # XDC Apothem RPC
-XDC_RPC = "https://rpc.apothem.network"
+XDC_RPC = os.getenv("RPC_URL", "https://erpc.apothem.network")
 
 # Contract addresses (update after deployment)
-JOB_ESCROW_ADDRESS = os.getenv("JOB_ESCROW_ADDRESS", "0x0000000000000000000000000000000000000000")
+JOB_ESCROW_ADDRESS = os.getenv("JOB_ESCROW_ADDRESS", "0x2Ff9B760510fc0aAd51a59f8aDA62F8B2631a075")
 
 class BlockchainIndexer:
     def __init__(self):
