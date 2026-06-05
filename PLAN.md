@@ -392,16 +392,29 @@ type CryptoVerifier interface {
 
 ---
 
-## 5. Sequential Execution Plan (PR Roadmap)
+## 5. Team Roles & Responsibilities (5 People)
 
-### PR 1: Monorepo Scaffold & XDC Tooling
-**Scope:** Initialize repo, configure Foundry for XDC, set up Go module, Next.js app.
+| Role | Person | Primary Focus | Secondary Support |
+|------|--------|---------------|-------------------|
+| **Smart Contract Lead** | Siddhi Jadhav | Solidity contracts, Foundry tests, XDC deployment | Contract integration with backend |
+| **Backend Lead** | M2 | FastAPI server, Web3.py bridge, PostgreSQL schema, IPFS integration | Daemon event streaming |
+| **Frontend Lead** | M3 | Next.js app, Wagmi/viem hooks, wallet connect, UI/UX | Demo video recording |
+| **DevOps / QA** | M4 | Docker setup, CI pipeline, contract deployment scripts, integration testing | Load testing, security checks |
+| **Documentation / PM** | M5 | README, pitch deck, demo script, API docs, project coordination | Frontend polish, QA support |
+
+---
+
+## 6. Sequential Execution Plan (PR Roadmap)
+
+### Phase 0: Environment Setup (Hour 0 → 1) — ALL HANDS
+**Scope:** Initialize monorepo, configure toolchains, connect to XDC testnet.
 
 **Tasks:**
 - [ ] `mkdir -p contracts/ daemon/ client/ shared/`
-- [ ] Foundry: `forge init contracts/` + configure `foundry.toml` for XDC (chainId 50/51, RPC endpoints)
+- [ ] Foundry: `forge init contracts/` + configure `foundry.toml` for XDC (chainId 51, RPC endpoints)
 - [ ] Go: `go mod init github.com/dicompute/daemon` + add deps (go-ethereum, docker SDK, viper)
 - [ ] Next.js: `npx create-next-app@14 client/` + Tailwind + Shadcn + Wagmi v2
+- [ ] FastAPI: `python -m venv backend/venv` + setup FastAPI scaffold
 - [ ] Add `docker-compose.yml` for local XDC devnet (or use Apothem testnet)
 - [ ] Add root `README.md` with architecture diagram
 
@@ -417,7 +430,7 @@ chain_id = 51 # Apothem testnet
 # Explorer: https://explorer.apothem.network
 ```
 
-### PR 2: Smart Contract Core (Solidity)
+### Phase 1: Smart Contract Core (Hour 1 → 4) — SMART CONTRACT LEAD + DEVOPS
 **Scope:** JobEscrow, GPURegistry, ReputationSystem, ProofReceipt NFT.
 
 **Tasks:**
@@ -429,7 +442,18 @@ chain_id = 51 # Apothem testnet
 - [ ] Foundry tests: state transitions, slashing logic, heartbeat verification
 - [ ] Deploy script for Apothem testnet
 
-### PR 3: Go Daemon Engine
+### Phase 2: Backend API (Hour 4 → 7) — BACKEND LEAD + SMART CONTRACT LEAD
+**Scope:** FastAPI server, Web3.py integration, PostgreSQL, IPFS.
+
+**Tasks:**
+- [ ] Scaffold async FastAPI project
+- [ ] Implement job, GPU, and user endpoints
+- [ ] Connect Web3.py to deployed contracts
+- [ ] Setup PostgreSQL schema (jobs, providers, heartbeats, receipts)
+- [ ] IPFS integration for result storage
+- [ ] WebSocket endpoint for real-time job status
+
+### Phase 3: Go Daemon Engine (Hour 4 → 7) — DEVOPS + BACKEND LEAD
 **Scope:** Docker provisioner, crypto verifier, heartbeat broadcaster.
 
 **Tasks:**
@@ -440,7 +464,7 @@ chain_id = 51 # Apothem testnet
 - [ ] `main.go`: Cobra CLI, config via env/flags, graceful shutdown
 - [ ] Unit tests for provisioner (mock Docker client)
 
-### PR 4: Client Dashboard (Next.js)
+### Phase 4: Client Dashboard (Hour 7 → 10) — FRONTEND LEAD + DOCUMENTATION
 **Scope:** Job wizard, uptime dashboard, receipt explorer.
 
 **Tasks:**
@@ -449,8 +473,9 @@ chain_id = 51 # Apothem testnet
 - [ ] `ReceiptExplorer.tsx`: Search proof receipts by jobId, verify on-chain
 - [ ] Wagmi hooks: useSubmitJob, useClaimJob, useSubmitHeartbeat, useChallengeProvider
 - [ ] Connect to XDC via Wagmi custom chain config
+- [ ] Wallet connect (MetaMask / XDCPay)
 
-### PR 5: Integration & End-to-End Test
+### Phase 5: Integration & QA (Hour 10 → 11) — ALL HANDS
 **Scope:** Wire all layers, run full job lifecycle on Apothem testnet.
 
 **Tasks:**
@@ -460,11 +485,21 @@ chain_id = 51 # Apothem testnet
 - [ ] Verify heartbeat flow
 - [ ] Complete job, mint receipt
 - [ ] Test challenge/slash path
-- [ ] Record demo video / screenshots
+- [ ] End-to-end integration tests
+
+### Phase 6: Demo Prep (Hour 11 → 12) — DOCUMENTATION + FRONTEND LEAD
+**Scope:** Final polish, demo recording, pitch deck.
+
+**Tasks:**
+- [ ] Record 2-minute walkthrough video
+- [ ] Finalize 5-slide pitch deck
+- [ ] Rehearse live demo
+- [ ] Final README and API documentation
+- [ ] Submit to hackathon portal
 
 ---
 
-## 6. XDC-Specific Considerations
+## 7. XDC-Specific Considerations
 
 | Aspect | XDC Mainnet | XDC Apothem (Testnet) |
 |--------|-------------|----------------------|
@@ -482,23 +517,25 @@ chain_id = 51 # Apothem testnet
 
 ---
 
-## 7. 12-Hour Time Budget
+## 8. 12-Hour Time Budget
 
-| Phase | Hours | Deliverable |
-|-------|-------|-------------|
-| Planning & scaffold | 1h | This plan + monorepo structure |
-| PR 2: Contracts | 3h | 4 contracts + tests + deploy |
-| PR 3: Daemon | 3h | Go binary with Docker + heartbeat |
-| PR 4: Dashboard | 3h | Next.js app with 3 screens |
-| PR 5: Integration | 2h | E2E test + demo |
+| Phase | Hours | Team | Deliverable |
+|-------|-------|------|-------------|
+| Planning & scaffold | 1h | All | Monorepo + toolchains |
+| Phase 1: Contracts | 3h | SC Lead + DevOps | 4 contracts + tests + deploy |
+| Phase 2: Backend | 3h | Backend + SC Lead | FastAPI + Web3.py + DB |
+| Phase 3: Daemon | 3h | DevOps + Backend | Go binary with Docker + heartbeat |
+| Phase 4: Dashboard | 3h | Frontend + Docs | Next.js app with 3 screens |
+| Phase 5: Integration | 1h | All | E2E test |
+| Phase 6: Demo Prep | 1h | Docs + Frontend | Video + pitch deck |
 
 ---
 
-## 8. Immediate Next Steps
+## 9. Immediate Next Steps
 
-1. **Approve this plan** — I will scaffold the monorepo (PR 1)
+1. **Approve this plan** — any changes to scope, interfaces, or team assignments?
 2. **Confirm XDC network** — Apothem testnet for dev? Mainnet for demo?
-3. **Docker environment** — Do you have Docker Desktop running on WSL?
-4. **XDC wallet** — Do you have an XDC wallet address for deployer?
+3. **Docker environment** — Do all team members have Docker Desktop available?
+4. **XDC wallet** — Do you have deployer wallet addresses + private keys for Apothem?
 
-Once confirmed, I begin PR 1 immediately.
+Once confirmed, we scaffold the monorepo and begin Phase 0 immediately.
