@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from models import Job
 from database import get_db
 from gpu_provider import gpu_manager
+from docker_manager import docker_manager
 
 class JobScheduler:
     """Schedules jobs to GPU providers"""
@@ -73,6 +74,19 @@ class JobScheduler:
                         job.state = "active"
                         job.provider_address = provider_address
                         db.commit()
+                        
+                        # Start Docker container
+                        print(f"🐳 Starting Docker container for job #{job.chain_job_id}")
+                        container_id = docker_manager.run_container(
+                            job_id=job.chain_job_id,
+                            docker_uri=job.docker_uri,
+                            gpu_id="0"
+                        )
+                        
+                        if container_id:
+                            print(f"✅ Container started: {container_id[:12]}")
+                        else:
+                            print(f"⚠️ Container failed to start, but job is assigned")
                         
                         print(f"✅ Job #{job.chain_job_id} assigned to {provider_address}")
                         print(f"   GPU: {best_provider['specs'].get('gpu_name', 'Unknown')}")

@@ -17,19 +17,23 @@ class DockerContainerManager:
         self.container_lock = threading.Lock()
     
     def run_container(self, job_id: int, docker_uri: str, gpu_id: str = "0") -> Optional[str]:
-        """Start a Docker container with GPU access"""
+        """Start a Docker container with GPU access (falls back to CPU if no GPU)"""
         container_name = f"nocap-job-{job_id}"
         
         try:
-            # Build Docker run command with GPU support
-            cmd = [
-                "docker", "run", "-d",
-                "--name", container_name,
-                "--gpus", f"\"device={gpu_id}\"",
-                "--rm",
-                "-e", f"JOB_ID={job_id}",
-                docker_uri
-            ]
+            # Check if GPU is available
+            gpu_available = self._check_gpu_available()
+            
+            # Build Docker run command
+            cmd = ["docker", "run", "-d", "--name", container_name, "--rm", "-e", f"JOB_ID={job_id}"]
+            
+            # Add GPU flag only if GPU is available
+            if gpu_available:
+                cmd.extend(["--gpus", f"\"device={gpu_id}\""])
+            else:
+                print("⚠️ No GPU found, running on CPU")
+            
+            cmd.append(docker_uri)
             
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
             
@@ -41,14 +45,14 @@ class DockerContainerManager:
                         "container_id": container_id,
                         "job_id": job_id,
                         "docker_uri": docker_uri,
-                        "gpu_id": gpu_id,
+                        "gpu_id": gpu_id if gpu_available else None,
                         "started_at": time.time(),
                         "status": "running"
                     }
                 
                 print(f"🐳 Container started: {container_name}")
                 print(f"   ID: {container_id[:12]}")
-                print(f"   GPU: {gpu_id}")
+                print(f"   GPU: {gpu_id if gpu_available else 'CPU only'}")
                 return container_id
             else:
                 print(f"❌ Container failed: {result.stderr}")
@@ -57,6 +61,18 @@ class DockerContainerManager:
         except Exception as e:
             print(f"❌ Docker error: {e}")
             return None
+    
+    def _check_gpu_available(self) -> bool:
+        """Check if NVIDIA GPU is available"""
+        try:
+            result = subprocess.run(
+                ["nvidia-smi"],
+                capture_output=True,
+                timeout=5
+            )
+            return result.returncode == 0
+        except:
+            return False
     
     def stop_container(self, job_id: int) -> bool:
         """Stop a running container"""
