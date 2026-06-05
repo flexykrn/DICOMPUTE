@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, Query
+from fastapi import FastAPI, Depends, HTTPException, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -404,6 +404,58 @@ async def websocket_jobs(websocket: WebSocket):
             await asyncio.sleep(5)
     except Exception:
         await websocket.close()
+
+# Provider endpoints for daemon integration
+@app.get("/api/provider/assignments/pending")
+async def get_pending_assignments(db: Session = Depends(get_db)):
+    """Return pending jobs that providers can claim"""
+    jobs = db.query(Job).filter(Job.state == "pending").order_by(Job.created_at.asc()).all()
+    return [
+        {
+            "job_id": job.id,
+            "chain_job_id": job.chain_job_id,
+            "user_address": job.user_address,
+            "spec": {
+                "docker_uri": job.docker_uri,
+                "cpu_milli": job.cpu_milli,
+                "ram_mib": job.ram_mib,
+                "vram_mib": job.vram_mib,
+                "duration_blocks": job.duration_blocks,
+                "max_price_per_block": str(job.max_price_per_block),
+            },
+            "deposit": str(job.deposit),
+            "assigned_at": job.created_at.isoformat() if job.created_at else None,
+            "input_cid": None,
+        }
+        for job in jobs
+    ]
+
+@app.post("/api/jobs/{job_id}/status")
+async def update_job_status(job_id: int, data: dict = Body(...), db: Session = Depends(get_db)):
+    """Update job status from provider daemon"""
+    job = db.query(Job).filter(Job.chain_job_id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    new_state = data.get("state")
+    if new_state in ["pending", "active", "completed", "slashed", "cancelled"]:
+        job.state = new_state
+    
+    db.commit()
+    return {"success": True, "job_id": job_id, "state": job.state}
+
+@app.post("/api/jobs/{job_id}/result")
+async def submit_job_result(job_id: int, data: dict = Body(...), db: Session = Depends(get_db)):
+    """Submit job result from provider daemon"""
+    job = db.query(Job).filter(Job.chain_job_id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    job.result_cid = data.get("result_cid")
+    job.instruction_count = data.get("instruction_count")
+    job.state = "completed"
+    db.commit()
+    return {"success": True, "job_id": job_id, "result_cid": job.result_cid}
 
 # IPFS Endpoints
 from ipfs_client import ipfs_client

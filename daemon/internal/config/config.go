@@ -50,7 +50,7 @@ func Load() (*Config, error) {
 	_ = godotenv.Load("/etc/dicompute/daemon.env")
 
 	cfg := &Config{
-		RPCURL:            getEnv("RPC_URL", "https://rpc.apothem.network"),
+		RPCURL:            getEnv("RPC_URL", "https://erpc.apothem.network"),
 		ChainID:           getEnvInt64("CHAIN_ID", 51),
 		JobEscrowAddress:  getEnv("JOB_ESCROW_ADDRESS", ""),
 		PrivateKey:        getEnv("PROVIDER_PRIVATE_KEY", ""),

@@ -73,3 +73,10 @@ __pycache__/
 
 # os
 Thumbs.db
+
+# go binaries
+daemon/daemon
+*.exe
+/dist
+/tmp
+vendor/
