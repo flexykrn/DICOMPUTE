@@ -18,7 +18,7 @@ class GPUProviderManager:
     
     def __init__(self):
         self.provider_lock = threading.Lock()
-        self.heartbeat_timeout = 30  # seconds
+        self.heartbeat_timeout = 300  # 5 minutes
         self._load_providers_from_db()
     
     def _get_db(self):
