@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,8 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { toast } from "sonner";
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { JOB_ESCROW_ADDRESS, jobEscrowAbi } from "@/lib/contracts/JobEscrow";
 
 export default function WizardPage() {
+  const { isConnected } = useAccount();
   const [dockerUri, setDockerUri] = useState("");
   const [cpu, setCpu] = useState([4000]);
   const [ram, setRam] = useState([16384]);
@@ -17,21 +20,76 @@ export default function WizardPage() {
   const [duration, setDuration] = useState([180]);
   const [price, setPrice] = useState(["1000000000000000"]);
 
+  const {
+    writeContract,
+    isPending: isSubmitting,
+    data: hash,
+    error: writeError,
+    reset,
+  } = useWriteContract();
+
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash,
+  });
+
+  useEffect(() => {
+    if (isConfirmed) {
+      toast.success(`Job submitted! Tx: ${hash}`);
+      reset();
+    }
+  }, [isConfirmed, hash, reset]);
+
+  useEffect(() => {
+    if (writeError) {
+      toast.error(writeError.message || "Transaction failed");
+    }
+  }, [writeError]);
+
   const fillDemo = () => {
-    setDockerUri("docker.io/pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime");
-    setCpu([4000]);
-    setRam([16384]);
-    setVram([8192]);
-    setDuration([180]);
+    setDockerUri("docker.io/library/hello-world:latest");
+    setCpu([1000]);
+    setRam([1024]);
+    setVram([0]);
+    setDuration([10]);
     setPrice(["1000000000000000"]);
     toast.success("Demo data filled!");
   };
 
-  const estimatedCost = (parseInt(duration[0]) * parseInt(price[0])).toString();
+  const estimatedCost = (BigInt(duration[0]) * BigInt(price[0])).toString();
 
   const handleSubmit = () => {
-    toast.info("Submit job — connect wallet first!");
-    // TODO: Implement Wagmi submitJob call
+    if (!isConnected) {
+      toast.info("Connect wallet first!");
+      return;
+    }
+    if (!dockerUri.trim()) {
+      toast.error("Docker image URI is required");
+      return;
+    }
+
+    const deposit = BigInt(estimatedCost);
+    if (deposit <= 0n) {
+      toast.error("Deposit must be greater than 0");
+      return;
+    }
+
+    writeContract({
+      address: JOB_ESCROW_ADDRESS,
+      abi: jobEscrowAbi,
+      functionName: "submitJob",
+      args: [
+        [
+          dockerUri,
+          BigInt(cpu[0]),
+          BigInt(ram[0]),
+          BigInt(vram[0]),
+          BigInt(duration[0]),
+          BigInt(price[0]),
+        ],
+        deposit,
+      ],
+      value: deposit,
+    });
   };
 
   return (
@@ -54,7 +112,7 @@ export default function WizardPage() {
             <div className="space-y-2">
               <Label>Docker Image URI</Label>
               <Input
-                placeholder="docker.io/pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime"
+                placeholder="docker.io/library/hello-world:latest"
                 value={dockerUri}
                 onChange={(e) => setDockerUri(e.target.value)}
               />
@@ -93,9 +151,24 @@ export default function WizardPage() {
               <div className="text-2xl font-bold">{estimatedCost} wei</div>
             </div>
 
-            <Button className="w-full" size="lg" onClick={handleSubmit}>
-              Submit Job (MetaMask)
+            <Button
+              className="w-full"
+              size="lg"
+              onClick={handleSubmit}
+              disabled={isSubmitting || isConfirming}
+            >
+              {isSubmitting
+                ? "Waiting for wallet..."
+                : isConfirming
+                ? "Confirming..."
+                : "Submit Job (MetaMask)"}
             </Button>
+
+            {hash && (
+              <div className="text-sm text-muted-foreground break-all">
+                Tx: {hash}
+              </div>
+            )}
           </CardContent>
         </Card>
       </main>

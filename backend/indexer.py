@@ -24,21 +24,26 @@ class BlockchainIndexer:
         self.w3 = Web3(Web3.HTTPProvider(XDC_RPC))
         self.running = False
         self.thread = None
+        self.last_indexed_block = None
+        self.deployment_block = 82731250
         
         # Load ABI (placeholder - update with actual ABI)
         self.job_escrow_abi = self._load_abi()
         
         if self.w3.is_connected():
-            print(f"✅ Connected to XDC Apothem (Block: {self.w3.eth.block_number})")
+            print(f" Connected to XDC Apothem (Block: {self.w3.eth.block_number})")
         else:
-            print("❌ Failed to connect to XDC Apothem")
+            print(" Failed to connect to XDC Apothem")
     
     def _load_abi(self):
         """Load JobEscrow ABI from file"""
         abi_path = os.path.join(os.path.dirname(__file__), "contracts", "JobEscrow.json")
         if os.path.exists(abi_path):
             with open(abi_path) as f:
-                return json.load(f)
+                data = json.load(f)
+                if isinstance(data, dict) and "abi" in data:
+                    return data["abi"]
+                return data
         
         # Minimal ABI for events
         return [
@@ -65,9 +70,20 @@ class BlockchainIndexer:
                 "anonymous": False,
                 "inputs": [
                     {"indexed": True, "name": "jobId", "type": "uint256"},
-                    {"indexed": False, "name": "resultCID", "type": "string"}
+                    {"indexed": True, "name": "provider", "type": "address"},
+                    {"indexed": False, "name": "payout", "type": "uint256"}
                 ],
                 "name": "JobCompleted",
+                "type": "event"
+            },
+            {
+                "anonymous": False,
+                "inputs": [
+                    {"indexed": True, "name": "jobId", "type": "uint256"},
+                    {"indexed": False, "name": "resultCID", "type": "string"},
+                    {"indexed": False, "name": "instructionCount", "type": "uint256"}
+                ],
+                "name": "ResultsSubmitted",
                 "type": "event"
             }
         ]
@@ -78,14 +94,14 @@ class BlockchainIndexer:
             self.running = True
             self.thread = threading.Thread(target=self._run, daemon=True)
             self.thread.start()
-            print("🚀 Blockchain indexer started")
+            print(" Blockchain indexer started")
     
     def stop(self):
         """Stop indexer"""
         self.running = False
         if self.thread:
             self.thread.join(timeout=5)
-            print("🛑 Blockchain indexer stopped")
+            print(" Blockchain indexer stopped")
     
     def _run(self):
         """Main indexer loop"""
@@ -94,17 +110,28 @@ class BlockchainIndexer:
                 self._index_events()
                 time.sleep(2)  # Poll every 2 seconds
             except Exception as e:
-                print(f"❌ Indexer error: {e}")
+                print(f" Indexer error: {e}")
                 time.sleep(5)  # Wait longer on error
     
     def _index_events(self):
         """Index new blockchain events"""
         if not self.w3.is_connected():
-            print("⚠️ Not connected to blockchain")
+            print(" Not connected to blockchain")
             return
         
         # Get latest block
         latest_block = self.w3.eth.block_number
+        
+        # Determine from_block
+        if self.last_indexed_block is None:
+            from_block = self.deployment_block
+        else:
+            from_block = self.last_indexed_block + 1
+        
+        if from_block < 0:
+            from_block = 0
+        if from_block > latest_block:
+            return
         
         # Create contract instance
         contract = self.w3.eth.contract(
@@ -115,19 +142,19 @@ class BlockchainIndexer:
         # Process JobSubmitted events
         try:
             event_filter = contract.events.JobSubmitted().create_filter(
-                from_block=max(0, latest_block - 10),
+                from_block=from_block,
                 to_block=latest_block
             )
             events = event_filter.get_all_entries()
             for event in events:
-                self._handle_job_submitted(event)
+                self._handle_job_submitted(event, contract)
         except Exception as e:
             print(f"JobSubmitted error: {e}")
         
         # Process JobClaimed events
         try:
             event_filter = contract.events.JobClaimed().create_filter(
-                from_block=max(0, latest_block - 10),
+                from_block=from_block,
                 to_block=latest_block
             )
             events = event_filter.get_all_entries()
@@ -136,10 +163,22 @@ class BlockchainIndexer:
         except Exception as e:
             print(f"JobClaimed error: {e}")
         
+        # Process ResultsSubmitted events
+        try:
+            event_filter = contract.events.ResultsSubmitted().create_filter(
+                from_block=from_block,
+                to_block=latest_block
+            )
+            events = event_filter.get_all_entries()
+            for event in events:
+                self._handle_results_submitted(event)
+        except Exception as e:
+            print(f"ResultsSubmitted error: {e}")
+        
         # Process JobCompleted events
         try:
             event_filter = contract.events.JobCompleted().create_filter(
-                from_block=max(0, latest_block - 10),
+                from_block=from_block,
                 to_block=latest_block
             )
             events = event_filter.get_all_entries()
@@ -147,12 +186,33 @@ class BlockchainIndexer:
                 self._handle_job_completed(event)
         except Exception as e:
             print(f"JobCompleted error: {e}")
+        
+        self.last_indexed_block = latest_block
     
-    def _handle_job_submitted(self, event):
+    def _handle_job_submitted(self, event, contract):
         """Handle JobSubmitted event"""
         job_id = event['args']['jobId']
         user = event['args']['user']
         deposit = event['args']['deposit']
+        
+        # Fetch full job details from contract to get spec
+        docker_uri = ""
+        cpu_milli = 0
+        ram_mib = 0
+        vram_mib = 0
+        duration_blocks = 0
+        max_price_per_block = "0"
+        try:
+            job_data = contract.functions.getJob(job_id).call()
+            spec = job_data[2]
+            docker_uri = spec[0]
+            cpu_milli = int(spec[1])
+            ram_mib = int(spec[2])
+            vram_mib = int(spec[3])
+            duration_blocks = int(spec[4])
+            max_price_per_block = str(spec[5])
+        except Exception as e:
+            print(f" Could not fetch job spec for #{job_id}: {e}")
         
         # Create database session
         db = next(get_db())
@@ -163,12 +223,18 @@ class BlockchainIndexer:
                 job = Job(
                     chain_job_id=job_id,
                     user_address=user,
+                    docker_uri=docker_uri,
+                    cpu_milli=cpu_milli,
+                    ram_mib=ram_mib,
+                    vram_mib=vram_mib,
+                    duration_blocks=duration_blocks,
+                    max_price_per_block=max_price_per_block,
                     deposit=str(deposit),
                     state="pending"
                 )
                 db.add(job)
                 db.commit()
-                print(f"📥 Indexed job #{job_id} from {user}")
+                print(f" Indexed job #{job_id} from {user}")
         finally:
             db.close()
     
@@ -184,23 +250,38 @@ class BlockchainIndexer:
                 job.state = "active"
                 job.provider_address = provider
                 db.commit()
-                print(f"✅ Job #{job_id} claimed by {provider}")
+                print(f" Job #{job_id} claimed by {provider}")
+        finally:
+            db.close()
+    
+    def _handle_results_submitted(self, event):
+        """Handle ResultsSubmitted event - captures result CID"""
+        job_id = event['args']['jobId']
+        result_cid = event['args'].get('resultCID', '')
+        instruction_count = event['args'].get('instructionCount', 0)
+        
+        db = next(get_db())
+        try:
+            job = db.query(Job).filter(Job.chain_job_id == job_id).first()
+            if job:
+                job.result_cid = result_cid
+                job.instruction_count = instruction_count
+                db.commit()
+                print(f" Results submitted for job #{job_id}: {result_cid[:50]}")
         finally:
             db.close()
     
     def _handle_job_completed(self, event):
         """Handle JobCompleted event"""
         job_id = event['args']['jobId']
-        result_cid = event['args'].get('resultCID', '')
         
         db = next(get_db())
         try:
             job = db.query(Job).filter(Job.chain_job_id == job_id).first()
             if job and job.state == "active":
                 job.state = "completed"
-                job.result_cid = result_cid
                 db.commit()
-                print(f"🎉 Job #{job_id} completed with CID: {result_cid}")
+                print(f" Job #{job_id} completed")
         finally:
             db.close()
 

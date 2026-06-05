@@ -14,15 +14,15 @@ def check(name, cmd, expected_in_output=None):
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=10)
         if result.returncode == 0:
             if expected_in_output and expected_in_output not in result.stdout:
-                print(f"❌ (missing: {expected_in_output})")
+                print(f" (missing: {expected_in_output})")
                 return False
-            print("✅")
+            print("")
             return True
         else:
-            print(f"❌")
+            print(f"")
             return False
     except Exception as e:
-        print(f"❌ ({e})")
+        print(f" ({e})")
         return False
 
 def main():
@@ -57,11 +57,11 @@ def main():
     print(f"Results: {passed}/{total} checks passed")
     
     if passed == total:
-        print("🎉 All checks passed! You're ready to run gpu_provider.py")
+        print(" All checks passed! You're ready to run gpu_provider.py")
         print("Run: python gpu_provider.py")
         return 0
     else:
-        print("⚠️  Some checks failed. See GPU_PROVIDER_README.md for setup instructions.")
+        print("  Some checks failed. See GPU_PROVIDER_README.md for setup instructions.")
         return 1
 
 if __name__ == "__main__":

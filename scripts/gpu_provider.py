@@ -30,7 +30,7 @@ RPC_URL = os.getenv("RPC_URL", "https://erpc.apothem.network")
 
 # Validate config
 if not PRIVATE_KEY:
-    print("❌ ERROR: PROVIDER_KEY not set in .env")
+    print(" ERROR: PROVIDER_KEY not set in .env")
     print("Create .env file with: PROVIDER_KEY=0x...")
     sys.exit(1)
 
@@ -333,7 +333,7 @@ def submit_results(job_id: int, result_cid: str, instruction_count: int) -> bool
         receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=60)
         
         if receipt.status == 1:
-            log_success(f"🎉 Job #{job_id} COMPLETED! Receipt minted.")
+            log_success(f" Job #{job_id} COMPLETED! Receipt minted.")
             return True
         else:
             log_error("Transaction failed")
@@ -424,9 +424,9 @@ def process_job(job_id: int, user: str, deposit: int):
     instruction_count = 1_000_000 + job_id * 1000
     
     if submit_results(job_id, result_cid, instruction_count):
-        log_success(f"✅ Job #{job_id} finished successfully!")
+        log_success(f" Job #{job_id} finished successfully!")
     else:
-        log_error(f"❌ Job #{job_id} failed at results submission")
+        log_error(f" Job #{job_id} failed at results submission")
 
 
 def signal_handler(sig, frame):

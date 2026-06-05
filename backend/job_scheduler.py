@@ -26,14 +26,14 @@ class JobScheduler:
             self.running = True
             self.scheduler_thread = threading.Thread(target=self._run, daemon=True)
             self.scheduler_thread.start()
-            print("🚀 Job scheduler started")
+            print(" Job scheduler started")
     
     def stop(self):
         """Stop the scheduler"""
         self.running = False
         if self.scheduler_thread:
             self.scheduler_thread.join(timeout=5)
-            print("🛑 Job scheduler stopped")
+            print(" Job scheduler stopped")
     
     def _run(self):
         """Main scheduler loop"""
@@ -43,11 +43,17 @@ class JobScheduler:
                 self._check_completed_jobs()
                 time.sleep(self.check_interval)
             except Exception as e:
-                print(f"❌ Scheduler error: {e}")
+                print(f" Scheduler error: {e}")
                 time.sleep(10)
     
     def _schedule_pending_jobs(self):
         """Find pending jobs and assign to providers"""
+        # Skip local Docker scheduling if Docker is not available.
+        # Remote GPU providers claim jobs directly on-chain; the blockchain
+        # indexer updates the DB when JobClaimed events are detected.
+        if not self._docker_available():
+            return
+        
         db = next(get_db())
         try:
             # Get all pending jobs
@@ -77,7 +83,7 @@ class JobScheduler:
                         db.commit()
                         
                         # Start Docker container
-                        print(f"🐳 Starting Docker container for job #{job.chain_job_id}")
+                        print(f" Starting Docker container for job #{job.chain_job_id}")
                         container_id = docker_manager.run_container(
                             job_id=job.chain_job_id,
                             docker_uri=job.docker_uri,
@@ -85,18 +91,31 @@ class JobScheduler:
                         )
                         
                         if container_id:
-                            print(f"✅ Container started: {container_id[:12]}")
+                            print(f" Container started: {container_id[:12]}")
                         else:
-                            print(f"⚠️ Container failed to start, but job is assigned")
+                            print(f" Container failed to start, but job is assigned")
                         
-                        print(f"✅ Job #{job.chain_job_id} assigned to {provider_address}")
+                        print(f" Job #{job.chain_job_id} assigned to {provider_address}")
                         print(f"   GPU: {best_provider['specs'].get('gpu_name', 'Unknown')}")
                         print(f"   VRAM: {best_provider['specs'].get('vram_gb', 0)} GB")
                 else:
-                    print(f"⏳ No available provider for job #{job.chain_job_id}")
+                    print(f" No available provider for job #{job.chain_job_id}")
                     
         finally:
             db.close()
+    
+    def _docker_available(self) -> bool:
+        """Check if Docker CLI is available on this machine"""
+        try:
+            import subprocess
+            result = subprocess.run(
+                ["docker", "--version"],
+                capture_output=True,
+                timeout=5
+            )
+            return result.returncode == 0
+        except Exception:
+            return False
     
     def get_job_status(self, job_id: int) -> Optional[dict]:
         """Get current status of a job"""
@@ -139,6 +158,9 @@ class JobScheduler:
     
     def _check_completed_jobs(self):
         """Check if active jobs have completed (Docker container finished)"""
+        if not self._docker_available():
+            return
+        
         db = next(get_db())
         try:
             # Get all active jobs
@@ -178,11 +200,11 @@ class JobScheduler:
                         if job.provider_address:
                             gpu_manager.release_job(job.provider_address, job.chain_job_id, success=True)
                         
-                        print(f"🎉 Job #{job.chain_job_id} completed!")
+                        print(f" Job #{job.chain_job_id} completed!")
                         print(f"   Result: {job.result_cid[:100]}...")
                         
                 except Exception as e:
-                    print(f"⚠️ Error checking job #{job.chain_job_id}: {e}")
+                    print(f" Error checking job #{job.chain_job_id}: {e}")
                     
         finally:
             db.close()

@@ -212,7 +212,7 @@ def main():
                     signed = account.sign_transaction(tx)
                     tx_hash = w3.eth.send_raw_transaction(signed.rawTransaction)
                     w3.eth.wait_for_transaction_receipt(tx_hash)
-                    log_success(f"Job #{job_id} COMPLETED — Receipt minted!")
+                    log_success(f"Job #{job_id} COMPLETED  Receipt minted!")
                 except Exception as e:
                     log_error(f"Failed to submit results: {e}")
 

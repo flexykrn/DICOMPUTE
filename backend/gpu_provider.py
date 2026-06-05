@@ -30,11 +30,11 @@ class GPUProviderManager:
         db = self._get_db()
         try:
             providers = db.query(Provider).filter(Provider.is_registered == True).all()
-            print(f"📊 Loaded {len(providers)} providers from database")
+            print(f" Loaded {len(providers)} providers from database")
             for provider in providers:
                 print(f"   - {provider.address}")
         except Exception as e:
-            print(f"⚠️ Could not load providers from DB: {e}")
+            print(f" Could not load providers from DB: {e}")
         finally:
             db.close()
     
@@ -56,11 +56,11 @@ class GPUProviderManager:
                 provider.is_registered = True
             
             db.commit()
-            print(f"✅ GPU Provider registered: {address}")
+            print(f" GPU Provider registered: {address}")
             print(f"   Specs: {specs}")
             return True
         except Exception as e:
-            print(f"❌ Registration error: {e}")
+            print(f" Registration error: {e}")
             db.rollback()
             return False
         finally:
@@ -91,7 +91,7 @@ class GPUProviderManager:
             db.commit()
             return True
         except Exception as e:
-            print(f"❌ Heartbeat error: {e}")
+            print(f" Heartbeat error: {e}")
             return False
         finally:
             db.close()
@@ -163,7 +163,7 @@ class GPUProviderManager:
             db.commit()
             return True
         except Exception as e:
-            print(f"❌ Assign job error: {e}")
+            print(f" Assign job error: {e}")
             return False
         finally:
             db.close()
@@ -188,7 +188,7 @@ class GPUProviderManager:
                 provider.metadata_uri = json.dumps(metadata)
                 db.commit()
         except Exception as e:
-            print(f"❌ Release job error: {e}")
+            print(f" Release job error: {e}")
         finally:
             db.close()
     
@@ -277,11 +277,11 @@ class GPUProviderManager:
                 if current_time - last_heartbeat > self.heartbeat_timeout * 2:
                     metadata['status'] = 'offline'
                     provider.metadata_uri = json.dumps(metadata)
-                    print(f"🧹 Marked offline: {provider.address}")
+                    print(f" Marked offline: {provider.address}")
             
             db.commit()
         except Exception as e:
-            print(f"❌ Cleanup error: {e}")
+            print(f" Cleanup error: {e}")
         finally:
             db.close()
 

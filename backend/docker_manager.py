@@ -31,7 +31,7 @@ class DockerContainerManager:
             if gpu_available:
                 cmd.extend(["--gpus", f"\"device={gpu_id}\""])
             else:
-                print("⚠️ No GPU found, running on CPU")
+                print(" No GPU found, running on CPU")
             
             cmd.append(docker_uri)
             
@@ -50,16 +50,16 @@ class DockerContainerManager:
                         "status": "running"
                     }
                 
-                print(f"🐳 Container started: {container_name}")
+                print(f" Container started: {container_name}")
                 print(f"   ID: {container_id[:12]}")
                 print(f"   GPU: {gpu_id if gpu_available else 'CPU only'}")
                 return container_id
             else:
-                print(f"❌ Container failed: {result.stderr}")
+                print(f" Container failed: {result.stderr}")
                 return None
                 
         except Exception as e:
-            print(f"❌ Docker error: {e}")
+            print(f" Docker error: {e}")
             return None
     
     def _check_gpu_available(self) -> bool:
@@ -89,11 +89,11 @@ class DockerContainerManager:
                 if container_name in self.active_containers:
                     self.active_containers[container_name]["status"] = "stopped"
             
-            print(f"🛑 Container stopped: {container_name}")
+            print(f" Container stopped: {container_name}")
             return True
             
         except Exception as e:
-            print(f"❌ Stop error: {e}")
+            print(f" Stop error: {e}")
             return False
     
     def get_container_logs(self, job_id: int) -> str:
@@ -128,7 +128,7 @@ class DockerContainerManager:
             return None
             
         except Exception as e:
-            print(f"❌ Stats error: {e}")
+            print(f" Stats error: {e}")
             return None
     
     def get_gpu_usage(self) -> list:
@@ -155,7 +155,7 @@ class DockerContainerManager:
             return gpus
             
         except Exception as e:
-            print(f"❌ GPU stats error: {e}")
+            print(f" GPU stats error: {e}")
             return []
     
     def cleanup_finished_containers(self):

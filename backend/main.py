@@ -38,13 +38,13 @@ async def startup():
     import threading
     indexer_thread = threading.Thread(target=run_indexer, daemon=True)
     indexer_thread.start()
-    print("🚀 Blockchain indexer started")
+    print(" Blockchain indexer started")
     
     # Start job scheduler
     from job_scheduler import run_scheduler
     scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
     scheduler_thread.start()
-    print("🚀 Job scheduler started")
+    print(" Job scheduler started")
     
     # Start GPU provider cleanup
     from gpu_provider import gpu_manager
@@ -55,7 +55,7 @@ async def startup():
     
     cleanup_thread = threading.Thread(target=cleanup_loop, daemon=True)
     cleanup_thread.start()
-    print("🚀 GPU provider cleanup started")
+    print(" GPU provider cleanup started")
 
 # Schemas
 class HeartbeatCreate(BaseModel):
