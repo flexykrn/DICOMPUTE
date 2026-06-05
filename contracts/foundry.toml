@@ -1,0 +1,17 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+remappings = [
+    "@openzeppelin/=lib/openzeppelin-contracts/",
+    "forge-std/=lib/forge-std/src/"
+]
+
+# XDC Apothem Testnet
+[rpc_endpoints]
+apothem = "https://rpc.apothem.network"
+xdc = "https://rpc.xinfin.network"
+
+[etherscan]
+apothem = { key = "", url = "https://explorer.apothem.network/api" }
+xdc = { key = "", url = "https://explorer.xinfin.network/api" }
