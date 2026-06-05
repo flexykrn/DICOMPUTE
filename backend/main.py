@@ -7,7 +7,15 @@ from database import get_db, init_db
 from models import Job, Heartbeat, Provider, Receipt
 import os
 import asyncio
+import logging
 from dotenv import load_dotenv
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -24,6 +32,12 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup():
     init_db()
+    # Start blockchain indexer in background
+    from indexer import run_indexer
+    import threading
+    indexer_thread = threading.Thread(target=run_indexer, daemon=True)
+    indexer_thread.start()
+    print("🚀 Blockchain indexer started in background")
 
 # Schemas
 class HeartbeatCreate(BaseModel):
