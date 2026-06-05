@@ -7,6 +7,7 @@ from database import get_db, init_db
 from models import Job, Heartbeat, Provider, Receipt
 import os
 import asyncio
+import time
 import logging
 from dotenv import load_dotenv
 
@@ -583,6 +584,33 @@ async def get_gpu_job_status(job_id: int):
         return status
     else:
         raise HTTPException(status_code=404, detail="Job not found")
+
+@app.get("/api/jobs/{job_id}/result")
+async def get_job_result(job_id: int):
+    """Get job result after completion"""
+    db = next(get_db())
+    try:
+        job = db.query(Job).filter(Job.chain_job_id == job_id).first()
+        if not job:
+            raise HTTPException(status_code=404, detail="Job not found")
+        
+        if job.state != "completed":
+            return {
+                "job_id": job_id,
+                "state": job.state,
+                "result": None,
+                "message": f"Job is {job.state}, not completed yet"
+            }
+        
+        return {
+            "job_id": job_id,
+            "state": job.state,
+            "result": job.result_cid,
+            "provider": job.provider_address,
+            "completed_at": job.completed_at_block
+        }
+    finally:
+        db.close()
 
 if __name__ == "__main__":
     import uvicorn

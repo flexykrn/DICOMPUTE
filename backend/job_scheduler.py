@@ -40,6 +40,7 @@ class JobScheduler:
         while self.running:
             try:
                 self._schedule_pending_jobs()
+                self._check_completed_jobs()
                 time.sleep(self.check_interval)
             except Exception as e:
                 print(f"❌ Scheduler error: {e}")
@@ -133,6 +134,54 @@ class JobScheduler:
                 "online_providers": online_providers,
                 "available_slots": online_providers - active
             }
+        finally:
+            db.close()
+    
+    def _check_completed_jobs(self):
+        """Check if active jobs have completed (Docker container finished)"""
+        db = next(get_db())
+        try:
+            # Get all active jobs
+            active_jobs = db.query(Job).filter(Job.state == "active").all()
+            
+            for job in active_jobs:
+                # Check if container is still running
+                container_name = f"nocap-job-{job.chain_job_id}"
+                
+                try:
+                    import subprocess
+                    result = subprocess.run(
+                        ["docker", "ps", "-q", "-f", f"name={container_name}"],
+                        capture_output=True,
+                        text=True,
+                        timeout=5
+                    )
+                    
+                    # If container not in docker ps, it finished
+                    if not result.stdout.strip():
+                        # Container finished - get logs
+                        logs_result = subprocess.run(
+                            ["docker", "logs", container_name],
+                            capture_output=True,
+                            text=True,
+                            timeout=5
+                        )
+                        
+                        # Save result
+                        job.state = "completed"
+                        job.result_cid = logs_result.stdout[:1000]  # Store first 1000 chars
+                        db.commit()
+                        
+                        # Release provider
+                        if job.provider_address:
+                            gpu_manager.release_job(job.provider_address, job.chain_job_id, success=True)
+                        
+                        print(f"🎉 Job #{job.chain_job_id} completed!")
+                        print(f"   Result: {job.result_cid[:100]}...")
+                        
+                except Exception as e:
+                    print(f"⚠️ Error checking job #{job.chain_job_id}: {e}")
+                    
         finally:
             db.close()
 
