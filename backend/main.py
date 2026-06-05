@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from database import get_db, init_db
 from models import Job, Heartbeat, Provider, Receipt
 import os
+import asyncio
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -168,6 +169,33 @@ async def list_jobs(
         for job in jobs
     ]
 
+@app.get("/api/jobs/pending", response_model=List[JobResponse])
+async def list_pending_jobs(db: Session = Depends(get_db)):
+    jobs = db.query(Job).filter(Job.state == "pending").order_by(Job.created_at.desc()).all()
+    return [
+        {
+            "id": job.id,
+            "chain_job_id": job.chain_job_id,
+            "user_address": job.user_address,
+            "provider_address": job.provider_address,
+            "docker_uri": job.docker_uri,
+            "cpu_milli": job.cpu_milli,
+            "ram_mib": job.ram_mib,
+            "vram_mib": job.vram_mib,
+            "duration_blocks": job.duration_blocks,
+            "max_price_per_block": str(job.max_price_per_block),
+            "deposit": str(job.deposit),
+            "state": job.state,
+            "started_at_block": job.started_at_block,
+            "completed_at_block": job.completed_at_block,
+            "last_heartbeat_block": job.last_heartbeat_block,
+            "result_cid": job.result_cid,
+            "instruction_count": job.instruction_count,
+            "created_at": job.created_at.isoformat()
+        }
+        for job in jobs
+    ]
+
 @app.get("/api/jobs/{job_id}", response_model=JobResponse)
 async def get_job(job_id: int, db: Session = Depends(get_db)):
     job = db.query(Job).filter(Job.chain_job_id == job_id).first()
@@ -295,6 +323,133 @@ async def get_stats(db: Session = Depends(get_db)):
 async def health():
     return {"status": "ok", "service": "dicompute-api"}
 
+# Missing endpoints
+class JobCreate(BaseModel):
+    chain_job_id: int
+    user_address: str
+    docker_uri: str
+    cpu_milli: int
+    ram_mib: int
+    vram_mib: int
+    duration_blocks: int
+    max_price_per_block: str
+    deposit: str
+
+@app.post("/api/jobs", response_model=JobResponse)
+async def create_job(data: JobCreate, db: Session = Depends(get_db)):
+    job = Job(
+        chain_job_id=data.chain_job_id,
+        user_address=data.user_address,
+        docker_uri=data.docker_uri,
+        cpu_milli=data.cpu_milli,
+        ram_mib=data.ram_mib,
+        vram_mib=data.vram_mib,
+        duration_blocks=data.duration_blocks,
+        max_price_per_block=data.max_price_per_block,
+        deposit=data.deposit,
+        state="pending"
+    )
+    db.add(job)
+    db.commit()
+    db.refresh(job)
+    
+    return {
+        "id": job.id,
+        "chain_job_id": job.chain_job_id,
+        "user_address": job.user_address,
+        "provider_address": job.provider_address,
+        "docker_uri": job.docker_uri,
+        "cpu_milli": job.cpu_milli,
+        "ram_mib": job.ram_mib,
+        "vram_mib": job.vram_mib,
+        "duration_blocks": job.duration_blocks,
+        "max_price_per_block": str(job.max_price_per_block),
+        "deposit": str(job.deposit),
+        "state": job.state,
+        "started_at_block": job.started_at_block,
+        "completed_at_block": job.completed_at_block,
+        "last_heartbeat_block": job.last_heartbeat_block,
+        "result_cid": job.result_cid,
+        "instruction_count": job.instruction_count,
+        "created_at": job.created_at.isoformat()
+    }
+
+# WebSocket for real-time updates
+from fastapi import WebSocket
+
+@app.websocket("/ws/jobs")
+async def websocket_jobs(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        while True:
+            # Send current stats every 5 seconds
+            await websocket.send_json({
+                "type": "ping",
+                "message": "Connected to DICOMPUTE real-time updates"
+            })
+            await asyncio.sleep(5)
+    except Exception:
+        await websocket.close()
+
+# IPFS Endpoints
+from ipfs_client import ipfs_client
+from fastapi import UploadFile, File
+
+@app.post("/api/ipfs/upload")
+async def upload_to_ipfs(file: UploadFile = File(...)):
+    """Upload file to IPFS"""
+    import tempfile
+    import os
+    
+    # Save uploaded file temporarily
+    with tempfile.NamedTemporaryFile(delete=False) as tmp:
+        content = await file.read()
+        tmp.write(content)
+        tmp_path = tmp.name
+    
+    try:
+        # Upload to IPFS
+        cid = ipfs_client.upload_file(tmp_path)
+        if cid:
+            # Pin the CID
+            ipfs_client.pin_cid(cid)
+            return {"success": True, "cid": cid, "filename": file.filename}
+        else:
+            return {"success": False, "error": "Failed to upload to IPFS"}
+    finally:
+        # Clean up temp file
+        os.unlink(tmp_path)
+
+@app.get("/api/ipfs/download/{cid}")
+async def download_from_ipfs(cid: str):
+    """Download file from IPFS by CID"""
+    import tempfile
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.bin') as tmp:
+        tmp_path = tmp.name
+    
+    if ipfs_client.download_file(cid, tmp_path):
+        from fastapi.responses import FileResponse
+        return FileResponse(tmp_path, filename=f"ipfs_{cid}.bin")
+    else:
+        raise HTTPException(status_code=404, detail="CID not found on IPFS")
+
+@app.post("/api/ipfs/pin/{cid}")
+async def pin_ipfs_cid(cid: str):
+    """Pin CID to IPFS"""
+    if ipfs_client.pin_cid(cid):
+        return {"success": True, "cid": cid, "pinned": True}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to pin CID")
+
+@app.delete("/api/ipfs/unpin/{cid}")
+async def unpin_ipfs_cid(cid: str):
+    """Unpin CID from IPFS"""
+    if ipfs_client.unpin_cid(cid):
+        return {"success": True, "cid": cid, "pinned": False}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to unpin CID")
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8001)
