@@ -168,8 +168,10 @@ class JobScheduler:
                         )
                         
                         # Save result
+                        from datetime import datetime
                         job.state = "completed"
                         job.result_cid = logs_result.stdout[:1000]  # Store first 1000 chars
+                        job.completed_at_block = int(time.time())
                         db.commit()
                         
                         # Release provider

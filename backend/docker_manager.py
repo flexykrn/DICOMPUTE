@@ -25,7 +25,7 @@ class DockerContainerManager:
             gpu_available = self._check_gpu_available()
             
             # Build Docker run command
-            cmd = ["docker", "run", "-d", "--name", container_name, "--rm", "-e", f"JOB_ID={job_id}"]
+            cmd = ["docker", "run", "-d", "--name", container_name, "-e", f"JOB_ID={job_id}"]
             
             # Add GPU flag only if GPU is available
             if gpu_available:
