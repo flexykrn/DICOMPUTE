@@ -1,7 +1,7 @@
 import { getDefaultConfig, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { defineChain } from "viem";
+import { defineChain, http } from "viem";
 
 export const xdcApothem = defineChain({
   id: 51,
@@ -27,9 +27,12 @@ export const xdcApothem = defineChain({
 
 export const config = getDefaultConfig({
   appName: "DICOMPUTE",
-  projectId: "YOUR_WALLET_CONNECT_PROJECT_ID", // Replace with actual project ID from walletconnect.com
+  projectId: "YOUR_WALLET_CONNECT_PROJECT_ID",
   chains: [xdcApothem],
   ssr: true,
+  transports: {
+    [xdcApothem.id]: http(),
+  },
 });
 
 export const queryClient = new QueryClient();

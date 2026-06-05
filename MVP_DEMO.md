@@ -1,35 +1,27 @@
 # DICOMPUTE MVP Demo - Use Teammate's GPU from Your Laptop
 
-Script-only user flow. No frontend required.
-
-You submit a job from your laptop via Python script. A teammate's machine with a GPU runs a provider daemon that listens to the blockchain, executes the Docker container, and submits results on-chain.
+You can submit a job from the frontend or via Python script. A teammate's machine with a GPU runs the provider daemon, executes the Docker container, and submits results on-chain.
 
 ## Architecture
 
 ```
 Your Laptop                              Teammate's GPU Machine
 ------------                            ------------------------
-Backend API          <--index events--
+Frontend (wizard)  ----submitJob()--->  XDC Apothem Blockchain
+Backend API        <--index events--
   (SQLite + FastAPI)                    scripts/gpu_provider.py
                                         listens for JobSubmitted
                                         claims job -> runs Docker
                                         heartbeats -> submits results
-
-User: python test_submit_job.py
-  |
-  v
-XDC Apothem Blockchain (JobEscrow)
-  ^
-  |
-Provider: python gpu_provider.py
 ```
 
 ## Prerequisites
 
 1. XDC Apothem testnet XDC in the deployer/provider wallet
-2. Python 3.10+ with backend deps installed on both machines
-3. Docker installed on the GPU provider machine
-4. The provider wallet registered on `GPURegistry` with stake
+2. Python 3.10+ with backend deps installed
+3. Node.js with pnpm for the frontend (`corepack enable`, then `pnpm install`)
+4. Docker installed on the GPU provider machine
+5. The provider wallet registered on `GPURegistry` with stake
 
 ## Deployed Contracts (XDC Apothem)
 
@@ -39,49 +31,47 @@ See `deployed-addresses.json`:
 - ProofReceipt: `0xb35EfE4E7071B1c7ce7f00CC7BB667cEc706DBa2`
 - ReputationSystem: `0xf02ac8fDab069bd62B2CE9F53Ea0d09c725880E3`
 
-## Step 1: Start Backend API (on laptop or shared server)
+## Step 1: Start Backend API
 
 ```bash
 cd backend
 python -m uvicorn main:app --host 0.0.0.0 --port 8001
 ```
 
-The backend will:
-- Initialize SQLite DB
-- Index blockchain events from deployment block
-- Expose REST API at `http://localhost:8001`
-- Skip local Docker scheduling because execution is delegated to the remote GPU provider
+## Step 2: Start Frontend (optional but recommended)
 
-## Step 2: Start GPU Provider (on teammate's machine with GPU + Docker)
+```bash
+cd client
+pnpm install
+pnpm dev
+# Open http://localhost:3000
+```
 
-Copy the repo to the GPU machine, then:
+Use `pnpm` because npm has semver conflicts with the latest wagmi packages on Node 24.
+
+## Step 3: Start GPU Provider (on teammate's machine with GPU + Docker)
 
 ```bash
 cd scripts
 cp .env.example .env
 # Edit .env and set PROVIDER_KEY to the registered provider's private key
-# Set BACKEND_URL to point at the laptop backend if on LAN, e.g. http://192.168.1.x:8001
 python gpu_provider.py
 ```
 
-The provider will:
-- Listen for `JobSubmitted` events on XDC Apothem
-- Pull the Docker image and run the container with GPU support (falls back to CPU)
-- Send on-chain heartbeats
-- Submit results and trigger a Proof-of-Compute receipt NFT mint
+## Step 4: Submit a Job
 
-## Step 3: Submit a Job
+### Option A: Frontend Wizard
 
-From your laptop:
+Open http://localhost:3000/wizard, connect MetaMask to XDC Apothem (Chain ID 51), fill in the Docker image and specs, and click **Submit Job on-chain**.
+
+### Option B: Python Script
 
 ```bash
 cd scripts
 python test_submit_job.py
 ```
 
-This submits a `hello-world` Docker job directly to the `JobEscrow` contract on XDC Apothem.
-
-## Step 4: Watch the Flow
+## Step 5: Watch the Flow
 
 Check backend stats:
 
@@ -101,15 +91,34 @@ Check result after completion:
 curl http://localhost:8001/api/jobs/{chain_job_id}/result
 ```
 
+## Frontend Pages
+
+- `/` — Landing page with architecture overview
+- `/wizard` — Submit a job directly to the JobEscrow contract (MetaMask)
+- `/explorer` — Browse all jobs with filters and stats
+- `/jobs/{id}` — Job detail with on-chain proof verification
+- `/receipts/{id}` — ProofReceipt NFT view with on-chain verification
+- `/provider` — Provider setup and wallet status
+
+## On-Chain Proof
+
+The job detail and receipt pages read directly from the blockchain:
+- Job state, provider, start/completion blocks
+- Result CID and instruction count stored on-chain
+- ProofReceipt NFT contract data (cost, timestamp, CID)
+- Links to XDC Explorer for manual verification
+
 ## Demo Checklist
 
 - [ ] Backend API running on port 8001
 - [ ] GPU provider running on teammate's machine
-- [ ] Job submitted via `python test_submit_job.py`
+- [ ] Job submitted (via frontend or script)
 - [ ] Provider claims job on-chain
 - [ ] Container runs and finishes
 - [ ] Provider submits results
 - [ ] Backend shows `state: completed` and `result_cid`
+- [ ] Frontend `/jobs/{id}` shows on-chain proof data
+- [ ] Frontend `/receipts/{id}` displays the NFT receipt
 
 ## Troubleshooting
 
@@ -123,10 +132,10 @@ curl http://localhost:8001/api/jobs/{chain_job_id}/result
   `python scripts/transfer_ownership.py`
 - This transfers ownership of GPURegistry, ReputationSystem, and ProofReceipt to JobEscrow so it can call `incrementJobCompleted`, `recordCompletion`, and `mintReceipt`.
 
+### Frontend install fails with npm
+- Use pnpm: `corepack enable && pnpm install`
+
 ### Backend doesn't index events
 - Check backend logs for errors
 - Verify `backend/contracts/JobEscrow.json` exists with full ABI
 - The indexer scans from block `82731250` (deployment block) on first start
-
-### Provider script crashes with UnicodeEncodeError
-- This was fixed by removing emojis. Pull latest `main`.

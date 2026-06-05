@@ -23,6 +23,7 @@ typechain-types/
 
 # next.js
 /.next/
+client/.next/
 /out/
 
 # production
