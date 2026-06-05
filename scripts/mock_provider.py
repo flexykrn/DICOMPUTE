@@ -12,7 +12,7 @@ load_dotenv()
 # Config
 PRIVATE_KEY = os.getenv("PROVIDER_KEY", "")
 JOB_ESCROW_ADDRESS = os.getenv("JOB_ESCROW_ADDRESS", "")
-RPC_URL = os.getenv("RPC_URL", "https://rpc.apothem.network")
+RPC_URL = os.getenv("RPC_URL", "https://erpc.apothem.network")
 FAST_MODE = os.getenv("FAST_MODE", "false").lower() == "true"
 
 # Colors for terminal output
@@ -119,7 +119,7 @@ def main():
         heartbeat_typehash = bytes(32)
 
     # Event filter for JobSubmitted
-    event_filter = contract.events.JobSubmitted().create_filter(fromBlock='latest')
+    event_filter = contract.events.JobSubmitted().create_filter(from_block='latest')
     log_info("Waiting for JobSubmitted events...")
 
     heartbeat_interval = 2 if FAST_MODE else 5
@@ -141,7 +141,7 @@ def main():
                         'from': provider_address,
                         'nonce': w3.eth.get_transaction_count(provider_address),
                         'gas': 200000,
-                        'gasPrice': w3.to_wei('1', 'gwei')
+                        'gasPrice': w3.to_wei('25', 'gwei')
                     })
                     signed = account.sign_transaction(tx)
                     tx_hash = w3.eth.send_raw_transaction(signed.rawTransaction)
@@ -187,7 +187,7 @@ def main():
                             'from': provider_address,
                             'nonce': w3.eth.get_transaction_count(provider_address),
                             'gas': 200000,
-                            'gasPrice': w3.to_wei('1', 'gwei')
+                            'gasPrice': w3.to_wei('25', 'gwei')
                         })
                         signed_tx = account.sign_transaction(tx)
                         tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
@@ -207,7 +207,7 @@ def main():
                         'from': provider_address,
                         'nonce': w3.eth.get_transaction_count(provider_address),
                         'gas': 300000,
-                        'gasPrice': w3.to_wei('1', 'gwei')
+                        'gasPrice': w3.to_wei('25', 'gwei')
                     })
                     signed = account.sign_transaction(tx)
                     tx_hash = w3.eth.send_raw_transaction(signed.rawTransaction)

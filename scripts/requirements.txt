@@ -3,3 +3,4 @@ eth-account==0.13.0
 eth-abi==5.1.0
 python-dotenv==1.0.1
 requests==2.32.3
+psutil==5.9.8
