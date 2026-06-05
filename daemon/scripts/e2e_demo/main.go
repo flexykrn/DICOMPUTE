@@ -25,23 +25,22 @@ type MockBackendServer struct {
 
 func (m *MockBackendServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Path {
-	case "/api/provider/assignments/pending":
+	case "/api/jobs/pending":
 		if len(m.assignments) > 0 {
 			fmt.Fprintf(w, `[{
-				"job_id": %d,
+				"id": %d,
 				"chain_job_id": %d,
 				"user_address": "0xDemoUser",
-				"spec": {
-					"docker_uri": "nginx:alpine",
-					"cpu_milli": 2000,
-					"ram_mib": 4096,
-					"vram_mib": 0,
-					"duration_blocks": 100,
-					"max_price_per_block": 1000000000000000
-				},
-				"deposit": 100000000000000000,
-				"assigned_at": "%s"
-			}]`, m.assignments[0].JobID, m.assignments[0].ChainJobID, time.Now().Format(time.RFC3339))
+				"docker_uri": "nginx:alpine",
+				"cpu_milli": 2000,
+				"ram_mib": 4096,
+				"vram_mib": 0,
+				"duration_blocks": 100,
+				"max_price_per_block": "1000000000000000",
+				"deposit": "100000000000000000",
+				"state": "pending",
+				"created_at": "%s"
+			}]`, m.assignments[0].ID, m.assignments[0].ChainJobID, time.Now().Format(time.RFC3339))
 			m.assignments = nil // Clear so it's only returned once
 		} else {
 			w.WriteHeader(http.StatusNoContent)
@@ -68,18 +67,17 @@ func main() {
 	// Start mock backend
 	mock := &MockBackendServer{
 		assignments: []watcher.JobAssignment{{
-			JobID:       1,
+			ID:          1,
 			ChainJobID:  1,
 			UserAddress: "0xDemoUser",
-			Spec: models.JobSpec{
-				DockerURI:        "nginx:alpine",
-				CPUMilli:         2000,
-				RAMMiB:           4096,
-				VRAMMiB:          0,
-				DurationBlocks:   100,
-				MaxPricePerBlock: 1000000000000000,
-			},
-			Deposit: 100000000000000000,
+			DockerURI:   "nginx:alpine",
+			CPUMilli:    2000,
+			RAMMiB:      4096,
+			VRAMMiB:     0,
+			DurationBlocks:   100,
+			MaxPricePerBlock: "1000000000000000",
+			Deposit:     "100000000000000000",
+			State:       "pending",
 		}},
 	}
 
@@ -124,15 +122,20 @@ func main() {
 
 	// Register handler
 	jobWatcher.RegisterHandler(func(ctx context.Context, assignment watcher.JobAssignment) error {
-		fmt.Printf("\033[92m[DAEMON] Job %d assigned! Image: %s\033[0m\n", assignment.JobID, assignment.Spec.DockerURI)
+		fmt.Printf("\033[92m[DAEMON] Job %d assigned! Image: %s\033[0m\n", assignment.ID, assignment.DockerURI)
 
 		job := &models.Job{
-			ID:          assignment.JobID,
-			ChainJobID:  assignment.ChainJobID,
+			ID:          uint64(assignment.ID),
+			ChainJobID:  uint64(assignment.ChainJobID),
 			UserAddress: assignment.UserAddress,
-			Spec:        assignment.Spec,
-			Deposit:     assignment.Deposit,
-			State:       models.JobStateActive,
+			Spec: models.JobSpec{
+				DockerURI: assignment.DockerURI,
+				CPUMilli:  uint64(assignment.CPUMilli),
+				RAMMiB:    uint64(assignment.RAMMiB),
+				VRAMMiB:   uint64(assignment.VRAMMiB),
+			},
+			Deposit: 0,
+			State:   models.JobStateActive,
 		}
 
 		containerCfg := provisioner.BuildContainerConfig(job, cfg.DataVolumePath)

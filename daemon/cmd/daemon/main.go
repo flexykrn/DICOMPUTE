@@ -106,18 +106,23 @@ func main() {
 	// Register job handler
 	jobWatcher.RegisterHandler(func(ctx context.Context, assignment watcher.JobAssignment) error {
 		logger.Info("handling job assignment",
-			zap.Uint64("job_id", assignment.JobID),
-			zap.String("image", assignment.Spec.DockerURI),
+			zap.Int("job_id", assignment.ID),
+			zap.String("image", assignment.DockerURI),
 		)
 
 		// Build job model
 		job := &models.Job{
-			ID:          assignment.JobID,
-			ChainJobID:  assignment.ChainJobID,
+			ID:          uint64(assignment.ID),
+			ChainJobID:  uint64(assignment.ChainJobID),
 			UserAddress: assignment.UserAddress,
-			Spec:        assignment.Spec,
-			Deposit:     assignment.Deposit,
-			State:       models.JobStateActive,
+			Spec: models.JobSpec{
+				DockerURI: assignment.DockerURI,
+				CPUMilli:  uint64(assignment.CPUMilli),
+				RAMMiB:    uint64(assignment.RAMMiB),
+				VRAMMiB:   uint64(assignment.VRAMMiB),
+			},
+			Deposit: 0, // parse from string if needed
+			State:   models.JobStateActive,
 		}
 
 		// Build container config
