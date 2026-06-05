@@ -32,12 +32,29 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup():
     init_db()
-    # Start blockchain indexer in background
+    # Start blockchain indexer
     from indexer import run_indexer
     import threading
     indexer_thread = threading.Thread(target=run_indexer, daemon=True)
     indexer_thread.start()
-    print("🚀 Blockchain indexer started in background")
+    print("🚀 Blockchain indexer started")
+    
+    # Start job scheduler
+    from job_scheduler import run_scheduler
+    scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
+    scheduler_thread.start()
+    print("🚀 Job scheduler started")
+    
+    # Start GPU provider cleanup
+    from gpu_provider import gpu_manager
+    def cleanup_loop():
+        while True:
+            time.sleep(60)
+            gpu_manager.cleanup_offline_providers()
+    
+    cleanup_thread = threading.Thread(target=cleanup_loop, daemon=True)
+    cleanup_thread.start()
+    print("🚀 GPU provider cleanup started")
 
 # Schemas
 class HeartbeatCreate(BaseModel):
@@ -463,6 +480,57 @@ async def unpin_ipfs_cid(cid: str):
         return {"success": True, "cid": cid, "pinned": False}
     else:
         raise HTTPException(status_code=500, detail="Failed to unpin CID")
+
+# GPU Provider Endpoints
+from gpu_provider import gpu_manager
+from job_scheduler import scheduler
+
+class GPURegisterRequest(BaseModel):
+    address: str
+    specs: dict
+
+class GPUHeartbeatRequest(BaseModel):
+    address: str
+    gpu_percent: float
+    cpu_percent: float
+    ram_percent: float
+    vram_percent: float
+
+@app.post("/api/gpu/register")
+async def register_gpu(data: GPURegisterRequest):
+    """Register a GPU provider"""
+    if gpu_manager.register_provider(data.address, data.specs):
+        return {"success": True, "address": data.address, "status": "registered"}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to register GPU")
+
+@app.post("/api/gpu/heartbeat")
+async def gpu_heartbeat(data: GPUHeartbeatRequest):
+    """Update GPU provider heartbeat"""
+    if gpu_manager.update_heartbeat(data.address, data.dict()):
+        return {"success": True, "status": "online"}
+    else:
+        raise HTTPException(status_code=404, detail="Provider not found")
+
+@app.get("/api/gpu/providers")
+async def list_gpu_providers():
+    """List all GPU providers"""
+    providers = gpu_manager.get_all_providers()
+    return {"providers": providers, "count": len(providers)}
+
+@app.get("/api/gpu/queue")
+async def get_queue_status():
+    """Get job queue status"""
+    return scheduler.get_queue_status()
+
+@app.get("/api/gpu/jobs/{job_id}")
+async def get_gpu_job_status(job_id: int):
+    """Get GPU job status"""
+    status = scheduler.get_job_status(job_id)
+    if status:
+        return status
+    else:
+        raise HTTPException(status_code=404, detail="Job not found")
 
 if __name__ == "__main__":
     import uvicorn
