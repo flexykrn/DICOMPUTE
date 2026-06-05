@@ -34,20 +34,25 @@ func NewBackendClient(baseURL, apiKey string, logger *zap.Logger) *BackendClient
 	}
 }
 
-// JobAssignment represents a job assigned to this provider from the backend
+// JobAssignment represents a job from the backend API
 type JobAssignment struct {
-	JobID           uint64          `json:"job_id"`
-	ChainJobID      uint64          `json:"chain_job_id"`
+	ID              int             `json:"id"`
+	ChainJobID      int             `json:"chain_job_id"`
 	UserAddress     string          `json:"user_address"`
-	Spec            models.JobSpec  `json:"spec"`
-	Deposit         uint64          `json:"deposit"`
-	AssignedAt      time.Time       `json:"assigned_at"`
-	InputCID        string          `json:"input_cid,omitempty"`
+	DockerURI       string          `json:"docker_uri"`
+	CPUMilli        int             `json:"cpu_milli"`
+	RAMMiB          int             `json:"ram_mib"`
+	VRAMMiB         int             `json:"vram_mib"`
+	DurationBlocks  int             `json:"duration_blocks"`
+	MaxPricePerBlock string         `json:"max_price_per_block"`
+	Deposit         string          `json:"deposit"`
+	State           string          `json:"state"`
+	CreatedAt       string          `json:"created_at"`
 }
 
-// GetPendingAssignments fetches pending job assignments for this provider
+// GetPendingAssignments fetches pending job assignments from the backend
 func (bc *BackendClient) GetPendingAssignments(ctx context.Context) ([]JobAssignment, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", bc.baseURL+"/api/provider/assignments/pending", nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", bc.baseURL+"/api/jobs/pending", nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -215,7 +220,7 @@ func (w *Watcher) poll(ctx context.Context) {
 		for _, handler := range w.handlers {
 			if err := handler(ctx, assignment); err != nil {
 				w.logger.Error("handler failed",
-					zap.Uint64("job_id", assignment.JobID),
+					zap.Int("job_id", assignment.ID),
 					zap.Error(err),
 				)
 			}
