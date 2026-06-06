@@ -1,0 +1,667 @@
+[
+  {
+    "category": "autonomous-ai-agents",
+    "name": "antigravity-cli",
+    "title": "antigravity-cli",
+    "description": "Operate the Antigravity CLI (agy): plugins, auth, sandbox.",
+    "path": "autonomous-ai-agents/antigravity-cli/SKILL.md"
+  },
+  {
+    "category": "autonomous-ai-agents",
+    "name": "blackbox",
+    "title": "blackbox",
+    "description": "Delegate coding tasks to Blackbox AI CLI agent. Multi-model agent with built-in judge that runs tasks through multiple L",
+    "path": "autonomous-ai-agents/blackbox/SKILL.md"
+  },
+  {
+    "category": "autonomous-ai-agents",
+    "name": "grok",
+    "title": "grok",
+    "description": "Delegate coding to xAI Grok Build CLI (features, PRs).",
+    "path": "autonomous-ai-agents/grok/SKILL.md"
+  },
+  {
+    "category": "autonomous-ai-agents",
+    "name": "honcho",
+    "title": "honcho",
+    "description": "Configure and use Honcho memory with Hermes -- cross-session user modeling, multi-profile peer isolation, observation co",
+    "path": "autonomous-ai-agents/honcho/SKILL.md"
+  },
+  {
+    "category": "autonomous-ai-agents",
+    "name": "openhands",
+    "title": "openhands",
+    "description": "Delegate coding to OpenHands CLI (model-agnostic, LiteLLM).",
+    "path": "autonomous-ai-agents/openhands/SKILL.md"
+  },
+  {
+    "category": "blockchain",
+    "name": "evm",
+    "title": "evm",
+    "description": "Read-only EVM client: wallets, tokens, gas across 8 chains.",
+    "path": "blockchain/evm/SKILL.md"
+  },
+  {
+    "category": "blockchain",
+    "name": "hyperliquid",
+    "title": "hyperliquid",
+    "description": "Hyperliquid market data, account history, trade review.",
+    "path": "blockchain/hyperliquid/SKILL.md"
+  },
+  {
+    "category": "blockchain",
+    "name": "solana",
+    "title": "solana",
+    "description": "Query Solana blockchain data with USD pricing \u2014 wallet balances, token portfolios with values, transaction details, NFTs",
+    "path": "blockchain/solana/SKILL.md"
+  },
+  {
+    "category": "communication",
+    "name": "one-three-one-rule",
+    "title": "one-three-one-rule",
+    "description": ">",
+    "path": "communication/one-three-one-rule/SKILL.md"
+  },
+  {
+    "category": "creative",
+    "name": "baoyu-article-illustrator",
+    "title": "baoyu-article-illustrator",
+    "description": "Article illustrations: type \u00d7 style \u00d7 palette consistency.",
+    "path": "creative/baoyu-article-illustrator/SKILL.md"
+  },
+  {
+    "category": "creative",
+    "name": "baoyu-comic",
+    "title": "baoyu-comic",
+    "description": "Knowledge comics (\u77e5\u8bc6\u6f2b\u753b): educational, biography, tutorial.",
+    "path": "creative/baoyu-comic/SKILL.md"
+  },
+  {
+    "category": "creative",
+    "name": "blender-mcp",
+    "title": "blender-mcp",
+    "description": "Control Blender directly from Hermes via socket connection to the blender-mcp addon. Create 3D objects, materials, anima",
+    "path": "creative/blender-mcp/SKILL.md"
+  },
+  {
+    "category": "creative",
+    "name": "concept-diagrams",
+    "title": "concept-diagrams",
+    "description": "Generate flat, minimal light/dark-aware SVG diagrams as standalone HTML files, using a unified educational visual langua",
+    "path": "creative/concept-diagrams/SKILL.md"
+  },
+  {
+    "category": "creative",
+    "name": "creative-ideation",
+    "title": "Creative Ideation \u2014 Constraint-Driven Project Generation",
+    "description": "Generate project ideas via creative constraints.",
+    "path": "creative/creative-ideation/SKILL.md"
+  },
+  {
+    "category": "creative",
+    "name": "hyperframes",
+    "title": "hyperframes",
+    "description": "Create HTML-based video compositions, animated title cards, social overlays, captioned talking-head videos, audio-reacti",
+    "path": "creative/hyperframes/SKILL.md"
+  },
+  {
+    "category": "creative",
+    "name": "kanban-video-orchestrator",
+    "title": "kanban-video-orchestrator",
+    "description": "Plan, set up, and monitor a multi-agent video production pipeline backed by Hermes Kanban. Use when the user wants to ma",
+    "path": "creative/kanban-video-orchestrator/SKILL.md"
+  },
+  {
+    "category": "creative",
+    "name": "meme-generation",
+    "title": "meme-generation",
+    "description": "Generate real meme images by picking a template and overlaying text with Pillow. Produces actual .png meme files.",
+    "path": "creative/meme-generation/SKILL.md"
+  },
+  {
+    "category": "creative",
+    "name": "pixel-art",
+    "title": "pixel-art",
+    "description": "Pixel art w/ era palettes (NES, Game Boy, PICO-8).",
+    "path": "creative/pixel-art/SKILL.md"
+  },
+  {
+    "category": "devops",
+    "name": "cli",
+    "title": "cli",
+    "description": "Run 150+ AI apps via inference.sh CLI (infsh) \u2014 image generation, video creation, LLMs, search, 3D, social automation. U",
+    "path": "devops/cli/SKILL.md"
+  },
+  {
+    "category": "devops",
+    "name": "docker-management",
+    "title": "docker-management",
+    "description": "Manage Docker containers, images, volumes, networks, and Compose stacks \u2014 lifecycle ops, debugging, cleanup, and Dockerf",
+    "path": "devops/docker-management/SKILL.md"
+  },
+  {
+    "category": "devops",
+    "name": "hermes-s6-container-supervision",
+    "title": "hermes-s6-container-supervision",
+    "description": "Modify, debug, or extend the s6-overlay supervision tree inside the Hermes Agent Docker image \u2014 adding new services, deb",
+    "path": "devops/hermes-s6-container-supervision/SKILL.md"
+  },
+  {
+    "category": "devops",
+    "name": "pinggy-tunnel",
+    "title": "pinggy-tunnel",
+    "description": "Zero-install localhost tunnels over SSH via Pinggy.",
+    "path": "devops/pinggy-tunnel/SKILL.md"
+  },
+  {
+    "category": "devops",
+    "name": "watchers",
+    "title": "watchers",
+    "description": "Poll RSS, JSON APIs, and GitHub with watermark dedup.",
+    "path": "devops/watchers/SKILL.md"
+  },
+  {
+    "category": "dogfood",
+    "name": "adversarial-ux-test",
+    "title": "adversarial-ux-test",
+    "description": "Roleplay the most difficult, tech-resistant user for your product. Browse the app as that persona, find every UX pain po",
+    "path": "dogfood/adversarial-ux-test/SKILL.md"
+  },
+  {
+    "category": "email",
+    "name": "agentmail",
+    "title": "agentmail",
+    "description": "Give the agent its own dedicated email inbox via AgentMail. Send, receive, and manage email autonomously using agent-own",
+    "path": "email/agentmail/SKILL.md"
+  },
+  {
+    "category": "finance",
+    "name": "3-statement-model",
+    "title": "3-statement-model",
+    "description": "Build fully-integrated 3-statement models (IS, BS, CF) in Excel with working capital schedules, D&A roll-forwards, debt ",
+    "path": "finance/3-statement-model/SKILL.md"
+  },
+  {
+    "category": "finance",
+    "name": "comps-analysis",
+    "title": "comps-analysis",
+    "description": "Build comparable company analysis in Excel \u2014 operating metrics, valuation multiples, statistical benchmarking vs peer se",
+    "path": "finance/comps-analysis/SKILL.md"
+  },
+  {
+    "category": "finance",
+    "name": "dcf-model",
+    "title": "dcf-model",
+    "description": "Build institutional-quality DCF valuation models in Excel \u2014 revenue projections, FCF build, WACC, terminal value, Bear/B",
+    "path": "finance/dcf-model/SKILL.md"
+  },
+  {
+    "category": "finance",
+    "name": "excel-author",
+    "title": "excel-author",
+    "description": "Build auditable Excel workbooks headless with openpyxl \u2014 blue/black/green cell conventions, formulas over hardcodes, nam",
+    "path": "finance/excel-author/SKILL.md"
+  },
+  {
+    "category": "finance",
+    "name": "lbo-model",
+    "title": "lbo-model",
+    "description": "Build leveraged buyout models in Excel \u2014 sources & uses, debt schedule, cash sweep, exit multiple, IRR/MOIC sensitivity.",
+    "path": "finance/lbo-model/SKILL.md"
+  },
+  {
+    "category": "finance",
+    "name": "merger-model",
+    "title": "merger-model",
+    "description": "Build accretion/dilution (merger) models in Excel \u2014 pro-forma P&L, synergies, financing mix, EPS impact. Pairs with exce",
+    "path": "finance/merger-model/SKILL.md"
+  },
+  {
+    "category": "finance",
+    "name": "pptx-author",
+    "title": "pptx-author",
+    "description": "Build PowerPoint decks headless with python-pptx. Pairs with excel-author for model-backed decks where every number trac",
+    "path": "finance/pptx-author/SKILL.md"
+  },
+  {
+    "category": "finance",
+    "name": "stocks",
+    "title": "stocks",
+    "description": "Stock quotes, history, search, compare, crypto via Yahoo.",
+    "path": "finance/stocks/SKILL.md"
+  },
+  {
+    "category": "gaming",
+    "name": "minecraft-modpack-server",
+    "title": "minecraft-modpack-server",
+    "description": "Host modded Minecraft servers (CurseForge, Modrinth).",
+    "path": "gaming/minecraft-modpack-server/SKILL.md"
+  },
+  {
+    "category": "gaming",
+    "name": "pokemon-player",
+    "title": "pokemon-player",
+    "description": "Play Pokemon via headless emulator + RAM reads.",
+    "path": "gaming/pokemon-player/SKILL.md"
+  },
+  {
+    "category": "health",
+    "name": "fitness-nutrition",
+    "title": "fitness-nutrition",
+    "description": ">",
+    "path": "health/fitness-nutrition/SKILL.md"
+  },
+  {
+    "category": "health",
+    "name": "neuroskill-bci",
+    "title": "neuroskill-bci",
+    "description": ">",
+    "path": "health/neuroskill-bci/SKILL.md"
+  },
+  {
+    "category": "mcp",
+    "name": "fastmcp",
+    "title": "fastmcp",
+    "description": "Build, test, inspect, install, and deploy MCP servers with FastMCP in Python. Use when creating a new MCP server, wrappi",
+    "path": "mcp/fastmcp/SKILL.md"
+  },
+  {
+    "category": "mcp",
+    "name": "mcporter",
+    "title": "mcporter",
+    "description": "Use the mcporter CLI to list, configure, auth, and call MCP servers/tools directly (HTTP or stdio), including ad-hoc ser",
+    "path": "mcp/mcporter/SKILL.md"
+  },
+  {
+    "category": "migration",
+    "name": "openclaw-migration",
+    "title": "openclaw-migration",
+    "description": "Migrate a user's OpenClaw customization footprint into Hermes Agent. Imports Hermes-compatible memories, SOUL.md, comman",
+    "path": "migration/openclaw-migration/SKILL.md"
+  },
+  {
+    "category": "mlops",
+    "name": "accelerate",
+    "title": "accelerate",
+    "description": "Simplest distributed training API. 4 lines to add distributed support to any PyTorch script. Unified API for DeepSpeed/F",
+    "path": "mlops/accelerate/SKILL.md"
+  },
+  {
+    "category": "mlops",
+    "name": "chroma",
+    "title": "chroma",
+    "description": "Open-source embedding database for AI applications. Store embeddings and metadata, perform vector and full-text search, ",
+    "path": "mlops/chroma/SKILL.md"
+  },
+  {
+    "category": "mlops",
+    "name": "clip",
+    "title": "clip",
+    "description": "OpenAI's model connecting vision and language. Enables zero-shot image classification, image-text matching, and cross-mo",
+    "path": "mlops/clip/SKILL.md"
+  },
+  {
+    "category": "mlops",
+    "name": "faiss",
+    "title": "faiss",
+    "description": "Facebook's library for efficient similarity search and clustering of dense vectors. Supports billions of vectors, GPU ac",
+    "path": "mlops/faiss/SKILL.md"
+  },
+  {
+    "category": "mlops",
+    "name": "flash-attention",
+    "title": "flash-attention",
+    "description": "Optimizes transformer attention with Flash Attention for 2-4x speedup and 10-20x memory reduction. Use when training/run",
+    "path": "mlops/flash-attention/SKILL.md"
+  },
+  {
+    "category": "mlops",
+    "name": "guidance",
+    "title": "guidance",
+    "description": "Control LLM output with regex and grammars, guarantee valid JSON/XML/code generation, enforce structured formats, and bu",
+    "path": "mlops/guidance/SKILL.md"
+  },
+  {
+    "category": "mlops",
+    "name": "huggingface-tokenizers",
+    "title": "huggingface-tokenizers",
+    "description": "Fast tokenizers optimized for research and production. Rust-based implementation tokenizes 1GB in <20 seconds. Supports ",
+    "path": "mlops/huggingface-tokenizers/SKILL.md"
+  },
+  {
+    "category": "mlops",
+    "name": "inference",
+    "title": "inference",
+    "description": "Outlines: structured JSON/regex/Pydantic LLM generation.",
+    "path": "mlops/inference/outlines/SKILL.md"
+  },
+  {
+    "category": "mlops",
+    "name": "instructor",
+    "title": "instructor",
+    "description": "Extract structured data from LLM responses with Pydantic validation, retry failed extractions automatically, parse compl",
+    "path": "mlops/instructor/SKILL.md"
+  },
+  {
+    "category": "mlops",
+    "name": "lambda-labs",
+    "title": "lambda-labs",
+    "description": "Reserved and on-demand GPU cloud instances for ML training and inference. Use when you need dedicated GPU instances with",
+    "path": "mlops/lambda-labs/SKILL.md"
+  },
+  {
+    "category": "mlops",
+    "name": "llava",
+    "title": "llava",
+    "description": "Large Language and Vision Assistant. Enables visual instruction tuning and image-based conversations. Combines CLIP visi",
+    "path": "mlops/llava/SKILL.md"
+  },
+  {
+    "category": "mlops",
+    "name": "modal",
+    "title": "modal",
+    "description": "Serverless GPU cloud platform for running ML workloads. Use when you need on-demand GPU access without infrastructure ma",
+    "path": "mlops/modal/SKILL.md"
+  },
+  {
+    "category": "mlops",
+    "name": "nemo-curator",
+    "title": "nemo-curator",
+    "description": "GPU-accelerated data curation for LLM training. Supports text/image/video/audio. Features fuzzy deduplication (16\u00d7 faste",
+    "path": "mlops/nemo-curator/SKILL.md"
+  },
+  {
+    "category": "mlops",
+    "name": "peft",
+    "title": "peft",
+    "description": "Parameter-efficient fine-tuning for LLMs using LoRA, QLoRA, and 25+ methods. Use when fine-tuning large models (7B-70B) ",
+    "path": "mlops/peft/SKILL.md"
+  },
+  {
+    "category": "mlops",
+    "name": "pinecone",
+    "title": "pinecone",
+    "description": "Managed vector database for production AI applications. Fully managed, auto-scaling, with hybrid search (dense + sparse)",
+    "path": "mlops/pinecone/SKILL.md"
+  },
+  {
+    "category": "mlops",
+    "name": "pytorch-fsdp",
+    "title": "pytorch-fsdp",
+    "description": "Expert guidance for Fully Sharded Data Parallel training with PyTorch FSDP - parameter sharding, mixed precision, CPU of",
+    "path": "mlops/pytorch-fsdp/SKILL.md"
+  },
+  {
+    "category": "mlops",
+    "name": "pytorch-lightning",
+    "title": "pytorch-lightning",
+    "description": "High-level PyTorch framework with Trainer class, automatic distributed training (DDP/FSDP/DeepSpeed), callbacks system, ",
+    "path": "mlops/pytorch-lightning/SKILL.md"
+  },
+  {
+    "category": "mlops",
+    "name": "qdrant",
+    "title": "qdrant",
+    "description": "High-performance vector similarity search engine for RAG and semantic search. Use when building production RAG systems r",
+    "path": "mlops/qdrant/SKILL.md"
+  },
+  {
+    "category": "mlops",
+    "name": "research",
+    "title": "research",
+    "description": "DSPy: declarative LM programs, auto-optimize prompts, RAG.",
+    "path": "mlops/research/dspy/SKILL.md"
+  },
+  {
+    "category": "mlops",
+    "name": "saelens",
+    "title": "saelens",
+    "description": "Provides guidance for training and analyzing Sparse Autoencoders (SAEs) using SAELens to decompose neural network activa",
+    "path": "mlops/saelens/SKILL.md"
+  },
+  {
+    "category": "mlops",
+    "name": "simpo",
+    "title": "simpo",
+    "description": "Simple Preference Optimization for LLM alignment. Reference-free alternative to DPO with better performance (+6.4 points",
+    "path": "mlops/simpo/SKILL.md"
+  },
+  {
+    "category": "mlops",
+    "name": "slime",
+    "title": "slime",
+    "description": "Provides guidance for LLM post-training with RL using slime, a Megatron+SGLang framework. Use when training GLM models, ",
+    "path": "mlops/slime/SKILL.md"
+  },
+  {
+    "category": "mlops",
+    "name": "stable-diffusion",
+    "title": "stable-diffusion",
+    "description": "State-of-the-art text-to-image generation with Stable Diffusion models via HuggingFace Diffusers. Use when generating im",
+    "path": "mlops/stable-diffusion/SKILL.md"
+  },
+  {
+    "category": "mlops",
+    "name": "tensorrt-llm",
+    "title": "tensorrt-llm",
+    "description": "Optimizes LLM inference with NVIDIA TensorRT for maximum throughput and lowest latency. Use for production deployment on",
+    "path": "mlops/tensorrt-llm/SKILL.md"
+  },
+  {
+    "category": "mlops",
+    "name": "torchtitan",
+    "title": "torchtitan",
+    "description": "Provides PyTorch-native distributed LLM pretraining using torchtitan with 4D parallelism (FSDP2, TP, PP, CP). Use when p",
+    "path": "mlops/torchtitan/SKILL.md"
+  },
+  {
+    "category": "mlops",
+    "name": "training",
+    "title": "training",
+    "description": "Axolotl: YAML LLM fine-tuning (LoRA, DPO, GRPO).",
+    "path": "mlops/training/axolotl/SKILL.md"
+  },
+  {
+    "category": "mlops",
+    "name": "training",
+    "title": "training",
+    "description": "TRL: SFT, DPO, PPO, GRPO, reward modeling for LLM RLHF.",
+    "path": "mlops/training/trl-fine-tuning/SKILL.md"
+  },
+  {
+    "category": "mlops",
+    "name": "training",
+    "title": "training",
+    "description": "Unsloth: 2-5x faster LoRA/QLoRA fine-tuning, less VRAM.",
+    "path": "mlops/training/unsloth/SKILL.md"
+  },
+  {
+    "category": "mlops",
+    "name": "whisper",
+    "title": "whisper",
+    "description": "OpenAI's general-purpose speech recognition model. Supports 99 languages, transcription, translation to English, and lan",
+    "path": "mlops/whisper/SKILL.md"
+  },
+  {
+    "category": "productivity",
+    "name": "canvas",
+    "title": "canvas",
+    "description": "Canvas LMS integration \u2014 fetch enrolled courses and assignments using API token authentication.",
+    "path": "productivity/canvas/SKILL.md"
+  },
+  {
+    "category": "productivity",
+    "name": "here-now",
+    "title": "here-now",
+    "description": "Publish static sites to {slug}.here.now and store private files in cloud Drives for agent-to-agent handoff.",
+    "path": "productivity/here-now/SKILL.md"
+  },
+  {
+    "category": "productivity",
+    "name": "memento-flashcards",
+    "title": "memento-flashcards",
+    "description": ">-",
+    "path": "productivity/memento-flashcards/SKILL.md"
+  },
+  {
+    "category": "productivity",
+    "name": "shop-app",
+    "title": "shop-app",
+    "description": "Shop.app: product search, order tracking, returns, reorder.",
+    "path": "productivity/shop-app/SKILL.md"
+  },
+  {
+    "category": "productivity",
+    "name": "shopify",
+    "title": "shopify",
+    "description": "Shopify Admin & Storefront GraphQL APIs via curl. Products, orders, customers, inventory, metafields.",
+    "path": "productivity/shopify/SKILL.md"
+  },
+  {
+    "category": "productivity",
+    "name": "siyuan",
+    "title": "siyuan",
+    "description": "SiYuan Note API for searching, reading, creating, and managing blocks and documents in a self-hosted knowledge base via ",
+    "path": "productivity/siyuan/SKILL.md"
+  },
+  {
+    "category": "productivity",
+    "name": "telephony",
+    "title": "telephony",
+    "description": "Give Hermes phone capabilities without core tool changes. Provision and persist a Twilio number, send and receive SMS/MM",
+    "path": "productivity/telephony/SKILL.md"
+  },
+  {
+    "category": "research",
+    "name": "bioinformatics",
+    "title": "bioinformatics",
+    "description": "Gateway to 400+ bioinformatics skills from bioSkills and ClawBio. Covers genomics, transcriptomics, single-cell, variant",
+    "path": "research/bioinformatics/SKILL.md"
+  },
+  {
+    "category": "research",
+    "name": "darwinian-evolver",
+    "title": "darwinian-evolver",
+    "description": "Evolve prompts/regex/SQL/code with Imbue's evolution loop.",
+    "path": "research/darwinian-evolver/SKILL.md"
+  },
+  {
+    "category": "research",
+    "name": "domain-intel",
+    "title": "domain-intel",
+    "description": "Passive domain reconnaissance using Python stdlib. Subdomain discovery, SSL certificate inspection, WHOIS lookups, DNS r",
+    "path": "research/domain-intel/SKILL.md"
+  },
+  {
+    "category": "research",
+    "name": "drug-discovery",
+    "title": "drug-discovery",
+    "description": ">",
+    "path": "research/drug-discovery/SKILL.md"
+  },
+  {
+    "category": "research",
+    "name": "duckduckgo-search",
+    "title": "duckduckgo-search",
+    "description": "Free web search via DuckDuckGo \u2014 text, news, images, videos. No API key needed. Prefer the `ddgs` CLI when installed; us",
+    "path": "research/duckduckgo-search/SKILL.md"
+  },
+  {
+    "category": "research",
+    "name": "gitnexus-explorer",
+    "title": "gitnexus-explorer",
+    "description": "Index a codebase with GitNexus and serve an interactive knowledge graph via web UI + Cloudflare tunnel.",
+    "path": "research/gitnexus-explorer/SKILL.md"
+  },
+  {
+    "category": "research",
+    "name": "osint-investigation",
+    "title": "osint-investigation",
+    "description": "Public-records OSINT investigation framework \u2014 SEC EDGAR filings, USAspending contracts, Senate lobbying, OFAC sanctions",
+    "path": "research/osint-investigation/SKILL.md"
+  },
+  {
+    "category": "research",
+    "name": "parallel-cli",
+    "title": "parallel-cli",
+    "description": "Optional vendor skill for Parallel CLI \u2014 agent-native web search, extraction, deep research, enrichment, FindAll, and mo",
+    "path": "research/parallel-cli/SKILL.md"
+  },
+  {
+    "category": "research",
+    "name": "qmd",
+    "title": "qmd",
+    "description": "Search personal knowledge bases, notes, docs, and meeting transcripts locally using qmd \u2014 a hybrid retrieval engine with",
+    "path": "research/qmd/SKILL.md"
+  },
+  {
+    "category": "research",
+    "name": "scrapling",
+    "title": "scrapling",
+    "description": "Web scraping with Scrapling - HTTP fetching, stealth browser automation, Cloudflare bypass, and spider crawling via CLI ",
+    "path": "research/scrapling/SKILL.md"
+  },
+  {
+    "category": "research",
+    "name": "searxng-search",
+    "title": "searxng-search",
+    "description": "Free meta-search via SearXNG \u2014 aggregates results from 70+ search engines. Self-hosted or use a public instance. No API ",
+    "path": "research/searxng-search/SKILL.md"
+  },
+  {
+    "category": "security",
+    "name": "1password",
+    "title": "1password",
+    "description": "Set up and use 1Password CLI (op). Use when installing the CLI, enabling desktop app integration, signing in, and readin",
+    "path": "security/1password/SKILL.md"
+  },
+  {
+    "category": "security",
+    "name": "oss-forensics",
+    "title": "oss-forensics",
+    "description": "|",
+    "path": "security/oss-forensics/SKILL.md"
+  },
+  {
+    "category": "security",
+    "name": "sherlock",
+    "title": "sherlock",
+    "description": "OSINT username search across 400+ social networks. Hunt down social media accounts by username.",
+    "path": "security/sherlock/SKILL.md"
+  },
+  {
+    "category": "security",
+    "name": "web-pentest",
+    "title": "web-pentest",
+    "description": "|",
+    "path": "security/web-pentest/SKILL.md"
+  },
+  {
+    "category": "software-development",
+    "name": "code-wiki",
+    "title": "code-wiki",
+    "description": "Generate wiki docs + Mermaid diagrams for any codebase.",
+    "path": "software-development/code-wiki/SKILL.md"
+  },
+  {
+    "category": "software-development",
+    "name": "rest-graphql-debug",
+    "title": "rest-graphql-debug",
+    "description": "Debug REST/GraphQL APIs: status codes, auth, schemas, repro.",
+    "path": "software-development/rest-graphql-debug/SKILL.md"
+  },
+  {
+    "category": "software-development",
+    "name": "subagent-driven-development",
+    "title": "subagent-driven-development",
+    "description": "Execute plans via delegate_task subagents (2-stage review).",
+    "path": "software-development/subagent-driven-development/SKILL.md"
+  },
+  {
+    "category": "web-development",
+    "name": "page-agent",
+    "title": "page-agent",
+    "description": "Embed alibaba/page-agent into your own web application \u2014 a pure-JavaScript in-page GUI agent that ships as a single <scr",
+    "path": "web-development/page-agent/SKILL.md"
+  }
+]
