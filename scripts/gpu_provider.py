@@ -106,12 +106,11 @@ def get_system_stats() -> Dict[str, int]:
             "vram_percent": vram_percent
         }
     except ImportError:
-        log_warn("psutil not installed, using mock stats")
-        import random
+        log_warn("psutil not installed, using zero stats")
         return {
-            "cpu_percent": random.randint(4000, 8000),
-            "ram_percent": random.randint(2000, 6000),
-            "vram_percent": random.randint(1000, 4000)
+            "cpu_percent": 0,
+            "ram_percent": 0,
+            "vram_percent": 0
         }
 
 

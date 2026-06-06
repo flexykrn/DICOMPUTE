@@ -225,6 +225,28 @@ class BlockchainIndexer:
         except Exception as e:
             print(f"ReceiptMinted error: {e}")
         
+        # Process HeartbeatReceived events
+        try:
+            event_filter = contract.events.HeartbeatReceived().create_filter(
+                fromBlock=from_block,
+                toBlock=latest_block
+            )
+            for event in event_filter.get_all_entries():
+                self._handle_heartbeat_received(event)
+        except Exception as e:
+            print(f"HeartbeatReceived error: {e}")
+
+        # Process ProviderRegistered events
+        try:
+            event_filter = contract.events.ProviderRegistered().create_filter(
+                fromBlock=from_block,
+                toBlock=latest_block
+            )
+            for event in event_filter.get_all_entries():
+                self._handle_provider_registered(event)
+        except Exception as e:
+            print(f"ProviderRegistered error: {e}")
+
         self.last_indexed_block = latest_block
     
     def _handle_job_submitted(self, event, contract):
@@ -358,3 +380,49 @@ def run_indexer():
     """Start the blockchain indexer"""
     init_db()  # Ensure database is initialized
     indexer.start()
+
+    def _handle_heartbeat_received(self, event):
+        """Handle HeartbeatReceived event"""
+        args = event['args']
+        job_id = args['jobId']
+        block_number = event['blockNumber']
+        
+        print(f"  Heartbeat for job #{job_id} at block {block_number}")
+        
+        # Update job's last heartbeat block
+        db = next(get_db())
+        try:
+            job = db.query(Job).filter(Job.chain_job_id == job_id).first()
+            if job:
+                job.last_heartbeat_block = block_number
+                db.commit()
+                print(f"  Updated last_heartbeat_block for job #{job_id}")
+        except Exception as e:
+            print(f"  Heartbeat DB error: {e}")
+        finally:
+            db.close()
+
+    def _handle_provider_registered(self, event):
+        """Handle ProviderRegistered event"""
+        args = event['args']
+        provider_address = args['provider']
+        stake = args['stake']
+        
+        print(f"  Provider registered: {provider_address[:20]}... stake={stake}")
+        
+        db = next(get_db())
+        try:
+            provider = db.query(Provider).filter(Provider.address == provider_address).first()
+            if not provider:
+                provider = Provider(
+                    address=provider_address,
+                    stake=stake,
+                    is_registered=True
+                )
+                db.add(provider)
+                db.commit()
+                print(f"  Added new provider to DB")
+        except Exception as e:
+            print(f"  Provider DB error: {e}")
+        finally:
+            db.close()

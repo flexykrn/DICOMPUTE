@@ -23,9 +23,13 @@ load_dotenv()
 
 app = FastAPI(title="DICOMPUTE API", version="1.0.0")
 
+# CORS configuration - use env var for production
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:3001")
+allow_origins_list = [origin.strip() for origin in CORS_ORIGINS.split(",")]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allow_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -382,6 +386,18 @@ class JobCreate(BaseModel):
 
 @app.post("/api/jobs", response_model=JobResponse)
 async def create_job(data: JobCreate, db: Session = Depends(get_db)):
+    
+    # Validate required fields
+    if not data.docker_uri or not data.docker_uri.strip():
+        raise HTTPException(status_code=400, detail="docker_uri is required")
+    if data.cpu_milli <= 0:
+        raise HTTPException(status_code=400, detail="cpu_milli must be positive")
+    if data.ram_mib <= 0:
+        raise HTTPException(status_code=400, detail="ram_mib must be positive")
+    if data.duration_blocks <= 0:
+        raise HTTPException(status_code=400, detail="duration_blocks must be positive")
+    if data.max_price_per_block <= 0:
+        raise HTTPException(status_code=400, detail="max_price_per_block must be positive")
     job = Job(
         chain_job_id=data.chain_job_id,
         user_address=data.user_address,
@@ -466,15 +482,22 @@ async def websocket_job(websocket: WebSocket, job_id: str):
 
 async def broadcast_heartbeat(job_id: str, heartbeat_data: dict):
     """Broadcast heartbeat to all connected clients for a job"""
-    if job_id in active_connections:
-        try:
-            await active_connections[job_id].send_json({
-                "type": "heartbeat",
-                "job_id": job_id,
-                "data": heartbeat_data
-            })
-        except Exception as e:
-            print(f"Failed to broadcast heartbeat: {e}")
+    if job_id not in active_connections:
+        return
+    
+    websocket = active_connections[job_id]
+    try:
+        await websocket.send_json({
+            "type": "heartbeat",
+            "job_id": job_id,
+            "data": heartbeat_data
+        })
+    except Exception as e:
+        print(f"Failed to broadcast heartbeat for job {job_id}: {e}")
+        # Remove dead connection
+        if job_id in active_connections:
+            del active_connections[job_id]
+            print(f"Removed dead WebSocket connection for job {job_id}")
 
 
 @app.websocket("/ws/jobs")
