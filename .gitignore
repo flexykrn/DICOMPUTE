@@ -85,3 +85,7 @@ daemon/daemon
 /dist
 /tmp
 vendor/
+venv/
+venv2/
+backend/venv/
+backend/venv2/

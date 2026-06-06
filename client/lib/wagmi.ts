@@ -27,7 +27,7 @@ export const xdcApothem = defineChain({
 
 export const config = getDefaultConfig({
   appName: "DICOMPUTE",
-  projectId: "YOUR_WALLET_CONNECT_PROJECT_ID",
+  projectId: "21f16978fd430146fe7e908c6d64e8b7",
   chains: [xdcApothem],
   ssr: true,
   transports: {
