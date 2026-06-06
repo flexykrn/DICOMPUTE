@@ -143,7 +143,7 @@ function WizardContent() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f7f7f5]">
+    <div className="flex min-h-screen flex-col bg-[var(--bg-primary)]">
       <Navigation />
 
       <main className="flex-1 container mx-auto px-4 py-10">
@@ -174,24 +174,24 @@ function WizardContent() {
 
         {/* Selected GPU Card */}
         {selectedGPU && (
-          <Card className="mb-6 border-2 border-yellow-400 bg-yellow-50">
+          <Card className="mb-6 border-2 border-[#f5c800] bg-[var(--bg-secondary)]">
             <CardContent className="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between">
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center border-2 border-black bg-black text-white">
+                <div className="flex h-12 w-12 items-center justify-center border-2 border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-on-card)]">
                   <Cpu className="h-6 w-6" />
                 </div>
                 <div>
-                  <div className="font-mono text-xs font-bold uppercase text-muted-foreground">
+                  <div className="font-mono text-xs font-bold uppercase text-[var(--text-secondary)]">
                     Selected GPU
                   </div>
                   <div className="text-xl font-black">{decodeURIComponent(selectedGPU)}</div>
-                  <div className="font-mono text-xs text-muted-foreground">
+                  <div className="font-mono text-xs text-[var(--text-secondary)]">
                     Provider: {selectedProvider?.slice(0, 8)}...{selectedProvider?.slice(-6)} • {selectedVram}GB VRAM • {selectedCuda} CUDA cores
                   </div>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="font-mono text-xs text-muted-foreground">PRICE</div>
+              <div className="text-right text-[var(--text-primary)]">
+                <div className="font-mono text-xs text-[var(--text-secondary)]">PRICE</div>
                 <div className="text-2xl font-black text-green-600">
                   ${selectedPrice}/hr
                 </div>
@@ -237,7 +237,7 @@ function WizardContent() {
                     />
                     <label
                       htmlFor="dataset-upload"
-                      className="flex-1 cursor-pointer border-2 border-dashed border-black bg-[#f7f7f5] px-4 py-3 font-mono text-sm transition-colors hover:bg-yellow-50"
+                      className="flex-1 cursor-pointer border-2 border-dashed border-[var(--border-color)] bg-[var(--bg-primary)] px-4 py-3 font-mono text-sm transition-colors hover:bg-[var(--bg-secondary)]"
                     >
                       {datasetFile ? (
                         <span className="font-bold">{datasetFile.name}</span>
@@ -249,7 +249,7 @@ function WizardContent() {
                     </label>
                   </div>
                   {datasetCid && (
-                    <div className="border-2 border-black bg-[#e5e5e5] p-2 font-mono text-xs break-all">
+                    <div className="border-2 border-[var(--border-color)] bg-[var(--bg-secondary)] p-2 font-mono text-xs break-all text-[var(--text-primary)]">
                       IPFS CID: {datasetCid}
                     </div>
                   )}
@@ -313,7 +313,7 @@ function WizardContent() {
                 </Button>
 
                 {hash && (
-                  <div className="border-2 border-black bg-[#e5e5e5] p-3 font-mono text-xs break-all">
+                  <div className="border-2 border-[var(--border-color)] bg-[var(--bg-secondary)] p-3 font-mono text-xs break-all text-[var(--text-primary)]">
                     TX HASH: {hash}
                   </div>
                 )}
@@ -385,7 +385,7 @@ function WizardContent() {
 export default function WizardPage() {
   return (
     <Suspense fallback={
-      <div className="flex min-h-screen flex-col bg-[#f7f7f5]">
+      <div className="flex min-h-screen flex-col bg-[var(--bg-primary)]">
         <Navigation />
         <main className="flex flex-1 items-center justify-center font-mono">Loading wizard...</main>
         <Footer />

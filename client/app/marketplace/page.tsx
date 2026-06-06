@@ -118,12 +118,12 @@ export default function MarketplacePage() {
   const avgPrice = providers.length > 0 ? providers.reduce((sum, p) => sum + (p.price_per_hour || 0), 0) / providers.length : 0;
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f7f7f5]">
+    <div className="flex min-h-screen flex-col bg-[var(--bg-primary)]">
       <Navigation />
 
       <main className="flex-1">
         {/* Hero */}
-        <section className="border-b-2 border-black bg-black text-white">
+        <section className="border-b-2 border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-on-card)]">
           <div className="container mx-auto px-4 py-16 md:py-24">
             <div className="max-w-4xl">
               <div className="mb-4 inline-block border-2 border-yellow-400 bg-yellow-400 px-3 py-1 font-mono text-xs font-bold uppercase tracking-widest text-black">
@@ -134,11 +134,11 @@ export default function MarketplacePage() {
                 <br />
                 Power
               </h1>
-              <p className="mb-8 max-w-2xl font-mono text-lg leading-relaxed text-white/70">
+              <p className="mb-8 max-w-2xl font-mono text-lg leading-relaxed text-[var(--text-secondary)]">
                 Browse verified providers. Pick the perfect GPU for your AI training job.
                 Pay per hour. Download your trained model. Get on-chain proof.
               </p>
-              <div className="flex flex-wrap gap-6 font-mono text-sm">
+                <div className="flex flex-wrap gap-6 font-mono text-sm text-[var(--text-on-card)]">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-yellow-400" />
                   <span>{activeProviders.length} GPUs Available</span>
@@ -160,7 +160,7 @@ export default function MarketplacePage() {
           {/* Filters */}
           <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div className="flex flex-wrap gap-2">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 text-[var(--text-primary)]">
                 <Filter className="h-4 w-4" />
                 <span className="font-mono text-xs font-bold uppercase">Location:</span>
                 {locations.map((loc) => (
@@ -169,6 +169,7 @@ export default function MarketplacePage() {
                     variant={locationFilter === loc ? "default" : "outline"}
                     size="sm"
                     onClick={() => setLocationFilter(loc)}
+                    className={locationFilter === loc ? "bg-[var(--bg-card)] text-[var(--text-on-card)] border-[var(--bg-card)]" : "bg-[var(--bg-primary)] text-[var(--text-primary)] border-[var(--border-color)]"}
                   >
                     {loc}
                   </Button>
@@ -179,18 +180,18 @@ export default function MarketplacePage() {
             <div className="flex gap-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input
+                  <input
                   type="text"
                   placeholder="Search GPUs..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-64 border-2 border-black bg-white px-9 py-2 font-mono text-sm placeholder:text-muted-foreground"
+                  className="w-64 border-2 border-[var(--border-color)] bg-[var(--bg-primary)] px-9 py-2 font-mono text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]"
                 />
               </div>
             </div>
           </div>
 
-          <div className="mb-4 flex flex-wrap gap-2">
+          <div className="mb-4 flex flex-wrap gap-2 text-[var(--text-primary)]">
             <span className="font-mono text-xs font-bold uppercase">GPU Type:</span>
             {gpuTypes.map((gpu) => (
               <Button
@@ -198,6 +199,7 @@ export default function MarketplacePage() {
                 variant={gpuFilter === gpu ? "default" : "outline"}
                 size="sm"
                 onClick={() => setGpuFilter(gpu)}
+                className={gpuFilter === gpu ? "bg-[var(--bg-card)] text-[var(--text-on-card)] border-[var(--bg-card)]" : "bg-[var(--bg-primary)] text-[var(--text-primary)] border-[var(--border-color)]"}
               >
                 {gpu}
               </Button>
@@ -214,9 +216,9 @@ export default function MarketplacePage() {
 
           {!loading && filteredProviders.length === 0 && (
             <div className="py-20 text-center">
-              <Cpu className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-              <p className="font-mono text-lg text-muted-foreground">No GPUs match your filters.</p>
-              <p className="mt-2 font-mono text-sm text-muted-foreground">
+              <Cpu className="mx-auto mb-4 h-12 w-12 text-[var(--text-secondary)]" />
+              <p className="font-mono text-lg text-[var(--text-secondary)]">No GPUs match your filters.</p>
+              <p className="mt-2 font-mono text-sm text-[var(--text-secondary)]">
                 Try a different location or GPU type.
               </p>
             </div>
@@ -224,16 +226,16 @@ export default function MarketplacePage() {
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filteredProviders.map((provider) => (
-              <Card key={provider.address} className="border-2 border-black">
-                <CardHeader className="bg-black text-white">
+              <Card key={provider.address} className="border-2 border-[var(--border-color)] bg-[var(--bg-secondary)]">
+                <CardHeader className="bg-[var(--bg-card)] text-[var(--text-on-card)]">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center border-2 border-white bg-white text-black">
+                      <div className="flex h-10 w-10 items-center justify-center border-2 border-[var(--text-on-card)] bg-[var(--text-on-card)] text-[var(--bg-card)]">
                         <Cpu className="h-5 w-5" />
                       </div>
                       <div>
                         <CardTitle className="text-lg">{provider.gpu_name}</CardTitle>
-                        <div className="font-mono text-xs text-white/70">
+                        <div className="font-mono text-xs text-[var(--text-secondary)]">
                           {provider.address.slice(0, 8)}...{provider.address.slice(-6)}
                         </div>
                       </div>
@@ -253,44 +255,44 @@ export default function MarketplacePage() {
 
                 <CardContent className="space-y-4 pt-4">
                   {/* Specs */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="border-2 border-black p-3">
-                      <div className="font-mono text-xs font-bold uppercase text-muted-foreground">VRAM</div>
-                      <div className="text-xl font-black">{provider.vram_gb} GB</div>
+                  <div className="grid grid-cols-2 gap-3 text-[var(--text-primary)]">
+                    <div className="border-2 border-[var(--border-color)] p-3">
+                      <div className="font-mono text-xs font-bold uppercase text-[var(--text-secondary)]">VRAM</div>
+                      <div className="text-xl font-black text-[var(--text-primary)]">{provider.vram_gb} GB</div>
                     </div>
-                    <div className="border-2 border-black p-3">
-                      <div className="font-mono text-xs font-bold uppercase text-muted-foreground">CUDA Cores</div>
-                      <div className="text-xl font-black">{(provider.cuda_cores || 0).toLocaleString()}</div>
+                    <div className="border-2 border-[var(--border-color)] p-3">
+                      <div className="font-mono text-xs font-bold uppercase text-[var(--text-secondary)]">CUDA Cores</div>
+                      <div className="text-xl font-black text-[var(--text-primary)]">{(provider.cuda_cores || 0).toLocaleString()}</div>
                     </div>
-                    <div className="border-2 border-black p-3">
-                      <div className="font-mono text-xs font-bold uppercase text-muted-foreground">Location</div>
-                      <div className="font-mono text-sm font-bold">{provider.location}</div>
+                    <div className="border-2 border-[var(--border-color)] p-3">
+                      <div className="font-mono text-xs font-bold uppercase text-[var(--text-secondary)]">Location</div>
+                      <div className="font-mono text-sm font-bold text-[var(--text-primary)]">{provider.location}</div>
                     </div>
-                    <div className="border-2 border-black p-3">
-                      <div className="font-mono text-xs font-bold uppercase text-muted-foreground">Benchmark</div>
-                      <div className="font-mono text-sm font-bold">{(provider.benchmark_score || 0).toLocaleString()}</div>
+                    <div className="border-2 border-[var(--border-color)] p-3">
+                      <div className="font-mono text-xs font-bold uppercase text-[var(--text-secondary)]">Benchmark</div>
+                      <div className="font-mono text-sm font-bold text-[var(--text-primary)]">{(provider.benchmark_score || 0).toLocaleString()}</div>
                     </div>
                   </div>
 
                   {/* Reputation */}
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between text-[var(--text-primary)]">
                     <div className="flex items-center gap-1">
                       <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                       <span className="font-mono font-bold">{provider.reputation}</span>
-                      <span className="font-mono text-xs text-muted-foreground">
+                      <span className="font-mono text-xs text-[var(--text-secondary)]">
                         ({provider.total_jobs_completed} jobs)
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Globe className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-mono text-xs text-muted-foreground">{provider.location}</span>
+                      <Globe className="h-4 w-4 text-[var(--text-secondary)]" />
+                      <span className="font-mono text-xs text-[var(--text-secondary)]">{provider.location}</span>
                     </div>
                   </div>
 
                   {/* Price & CTA */}
-                  <div className="flex items-center justify-between border-t-2 border-black pt-4">
+                  <div className="flex items-center justify-between border-t-2 border-[var(--border-color)] pt-4 text-[var(--text-primary)]">
                     <div>
-                      <div className="font-mono text-xs text-muted-foreground">PRICE</div>
+                      <div className="font-mono text-xs text-[var(--text-secondary)]">PRICE</div>
                       <div className="text-2xl font-black text-green-600">
                         ${provider.price_per_hour?.toFixed(2)}/hr
                       </div>
@@ -314,16 +316,16 @@ export default function MarketplacePage() {
           </div>
 
           {/* Call to action for providers */}
-          <div className="mt-12 border-2 border-black bg-yellow-400 p-6">
+          <div className="mt-12 border-2 border-[var(--border-color)] bg-[#f5c800] p-6">
             <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-              <div>
+              <div className="text-[var(--text-primary)]">
                 <h3 className="text-2xl font-black uppercase tracking-tight">Have a GPU?</h3>
-                <p className="mt-1 font-mono text-black/70">
+                <p className="mt-1 font-mono text-[var(--text-secondary)]">
                   Register your GPU and earn DICO tokens for every job you complete.
                 </p>
               </div>
               <Link href="/provider">
-                <Button className="bg-black text-white hover:bg-black/80">
+                <Button className="bg-[var(--bg-card)] text-[var(--text-on-card)] hover:bg-[var(--bg-card)]/80">
                   Become a Provider
                 </Button>
               </Link>
