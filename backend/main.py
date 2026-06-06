@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from typing import List, Optional, Dict
+from typing import List, Optional
 from pydantic import BaseModel
 from database import get_db, init_db
 from models import Job, Heartbeat, Provider, Receipt
@@ -9,7 +9,6 @@ import os
 import asyncio
 import time
 import logging
-from datetime import datetime
 from dotenv import load_dotenv
 
 # Configure logging
@@ -23,13 +22,9 @@ load_dotenv()
 
 app = FastAPI(title="DICOMPUTE API", version="1.0.0")
 
-# CORS configuration - use env var for production
-CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:3001")
-allow_origins_list = [origin.strip() for origin in CORS_ORIGINS.split(",")]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allow_origins_list,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -100,6 +95,7 @@ class JobResponse(BaseModel):
     last_heartbeat_block: Optional[int]
     result_cid: Optional[str]
     instruction_count: Optional[int]
+    logs: Optional[str]
     created_at: str
 
 class ProviderResponse(BaseModel):
@@ -151,18 +147,6 @@ async def store_heartbeat(job_id: int, data: HeartbeatCreate, db: Session = Depe
     db.add(heartbeat)
     job.last_heartbeat_block = data.block_number
     db.commit()
-    
-    # Broadcast to WebSocket clients
-    heartbeat_data = {
-        "block_number": data.block_number,
-        "uptime_seconds": data.uptime_seconds,
-        "cpu_percent": data.cpu_percent,
-        "ram_percent": data.ram_percent,
-        "vram_percent": data.vram_percent,
-        "timestamp": datetime.utcnow().isoformat()
-    }
-    await broadcast_heartbeat(str(job_id), heartbeat_data)
-    
     return {"ok": True}
 
 @app.get("/api/jobs/{job_id}/heartbeats", response_model=List[HeartbeatResponse])
@@ -213,6 +197,7 @@ async def list_jobs(
             "last_heartbeat_block": job.last_heartbeat_block,
             "result_cid": job.result_cid,
             "instruction_count": job.instruction_count,
+            "logs": job.logs,
             "created_at": job.created_at.isoformat()
         }
         for job in jobs
@@ -240,6 +225,7 @@ async def list_pending_jobs(db: Session = Depends(get_db)):
             "last_heartbeat_block": job.last_heartbeat_block,
             "result_cid": job.result_cid,
             "instruction_count": job.instruction_count,
+            "logs": job.logs,
             "created_at": job.created_at.isoformat()
         }
         for job in jobs
@@ -269,6 +255,7 @@ async def get_job(job_id: int, db: Session = Depends(get_db)):
         "last_heartbeat_block": job.last_heartbeat_block,
         "result_cid": job.result_cid,
         "instruction_count": job.instruction_count,
+        "logs": job.logs,
         "created_at": job.created_at.isoformat()
     }
 
@@ -386,24 +373,6 @@ class JobCreate(BaseModel):
 
 @app.post("/api/jobs", response_model=JobResponse)
 async def create_job(data: JobCreate, db: Session = Depends(get_db)):
-    
-    # Validate required fields
-    if not data.docker_uri or not data.docker_uri.strip():
-        raise HTTPException(status_code=400, detail="docker_uri is required")
-    if data.cpu_milli <= 0:
-        raise HTTPException(status_code=400, detail="cpu_milli must be positive")
-    if data.ram_mib <= 0:
-        raise HTTPException(status_code=400, detail="ram_mib must be positive")
-    if data.duration_blocks <= 0:
-        raise HTTPException(status_code=400, detail="duration_blocks must be positive")
-    
-    # Convert string to int for comparison
-    try:
-        max_price = int(data.max_price_per_block)
-        if max_price <= 0:
-            raise HTTPException(status_code=400, detail="max_price_per_block must be positive")
-    except ValueError:
-        raise HTTPException(status_code=400, detail="max_price_per_block must be a valid number")
     job = Job(
         chain_job_id=data.chain_job_id,
         user_address=data.user_address,
@@ -441,77 +410,15 @@ async def create_job(data: JobCreate, db: Session = Depends(get_db)):
         "created_at": job.created_at.isoformat()
     }
 
-# WebSocket for real-time job updates
+# WebSocket for real-time updates
 from fastapi import WebSocket
-import json
-
-# Active WebSocket connections
-active_connections: Dict[str, WebSocket] = {}
-
-@app.websocket("/ws/jobs/{job_id}")
-async def websocket_job(websocket: WebSocket, job_id: str):
-    """WebSocket for real-time job heartbeat streaming"""
-    await websocket.accept()
-    active_connections[job_id] = websocket
-    
-    try:
-        # Send initial job status
-        db = next(get_db())
-        job = db.query(Job).filter(Job.chain_job_id == int(job_id)).first()
-        if job:
-            await websocket.send_json({
-                "type": "job_status",
-                "job_id": job_id,
-                "state": job.state,
-                "provider": job.provider_address,
-                "result_cid": job.result_cid
-            })
-        
-        # Keep connection alive and listen for updates
-        while True:
-            data = await websocket.receive_text()
-            message = json.loads(data)
-            
-            if message.get("action") == "subscribe":
-                await websocket.send_json({
-                    "type": "subscribed",
-                    "job_id": job_id,
-                    "message": "Listening for heartbeat updates"
-                })
-    except Exception as e:
-        print(f"WebSocket error for job {job_id}: {e}")
-    finally:
-        if job_id in active_connections:
-            del active_connections[job_id]
-        await websocket.close()
-
-
-async def broadcast_heartbeat(job_id: str, heartbeat_data: dict):
-    """Broadcast heartbeat to all connected clients for a job"""
-    if job_id not in active_connections:
-        return
-    
-    websocket = active_connections[job_id]
-    try:
-        await websocket.send_json({
-            "type": "heartbeat",
-            "job_id": job_id,
-            "data": heartbeat_data
-        })
-    except Exception as e:
-        print(f"Failed to broadcast heartbeat for job {job_id}: {e}")
-        # Remove dead connection
-        if job_id in active_connections:
-            del active_connections[job_id]
-            print(f"Removed dead WebSocket connection for job {job_id}")
-
 
 @app.websocket("/ws/jobs")
 async def websocket_jobs(websocket: WebSocket):
-    """General WebSocket for all jobs updates"""
     await websocket.accept()
     try:
         while True:
+            # Send current stats every 5 seconds
             await websocket.send_json({
                 "type": "ping",
                 "message": "Connected to DICOMPUTE real-time updates"
@@ -558,26 +465,6 @@ async def update_job_status(job_id: int, data: dict = Body(...), db: Session = D
     
     db.commit()
     return {"success": True, "job_id": job_id, "state": job.state}
-
-@app.post("/api/jobs/{job_id}/cancel")
-async def cancel_job(job_id: int, db: Session = Depends(get_db)):
-    """Cancel a pending job and refund deposit"""
-    job = db.query(Job).filter(Job.chain_job_id == job_id).first()
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
-    
-    if job.state != "pending":
-        raise HTTPException(status_code=400, detail=f"Cannot cancel job in {job.state} state. Only pending jobs can be cancelled.")
-    
-    job.state = "cancelled"
-    db.commit()
-    
-    return {
-        "success": True,
-        "job_id": job_id,
-        "state": "cancelled",
-        "message": "Job cancelled successfully. Refund will be processed on-chain."
-    }
 
 @app.post("/api/jobs/{job_id}/result")
 async def submit_job_result(job_id: int, data: dict = Body(...), db: Session = Depends(get_db)):
@@ -728,6 +615,35 @@ async def get_job_result(job_id: int):
         }
     finally:
         db.close()
+
+@app.post("/api/jobs/{job_id}/logs")
+async def append_job_logs(job_id: int, data: dict = Body(...), db: Session = Depends(get_db)):
+    """Append logs to a job (from provider daemon)"""
+    job = db.query(Job).filter(Job.chain_job_id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    new_logs = data.get("logs", "")
+    if job.logs:
+        job.logs = job.logs + "\n" + new_logs
+    else:
+        job.logs = new_logs
+    db.commit()
+    return {"success": True, "job_id": job_id, "lines_added": new_logs.count("\n") + 1}
+
+@app.get("/api/jobs/{job_id}/logs")
+async def get_job_logs(job_id: int, db: Session = Depends(get_db)):
+    """Get logs for a job"""
+    job = db.query(Job).filter(Job.chain_job_id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    return {
+        "job_id": job_id,
+        "state": job.state,
+        "logs": job.logs or "",
+        "lines": (job.logs or "").count("\n") + 1 if job.logs else 0
+    }
 
 if __name__ == "__main__":
     import uvicorn

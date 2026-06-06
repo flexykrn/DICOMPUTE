@@ -6,10 +6,26 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
-import { useAccount, useBalance } from "wagmi";
-import { Terminal, Copy, Check } from "lucide-react";
+import { useAccount, useBalance, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { toast } from "sonner";
+import { Cpu, Zap, Globe, ArrowRight, Play, Square, Activity } from "lucide-react";
+import Link from "next/link";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+const GPU_REGISTRY_ADDRESS = "0xCEf0f0E74e618A95Da97e1216F81d74eA01dE77C";
+
+const gpuRegistryAbi = [
+  {
+    inputs: [
+      { internalType: "uint256", name: "stake", type: "uint256" },
+      { internalType: "string", name: "metadataURI", type: "string" },
+    ],
+    name: "registerProvider",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+] as const;
 
 interface ProviderData {
   address: string;
@@ -25,7 +41,25 @@ export default function ProviderPage() {
   const { address, isConnected } = useAccount();
   const { data: balance } = useBalance({ address, query: { enabled: !!address } });
   const [provider, setProvider] = useState<ProviderData | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [providers, setProviders] = useState<ProviderData[]>([]);
+  const [providerRunning, setProviderRunning] = useState(false);
+  const [stakeAmount, setStakeAmount] = useState("10");
+  const [gpuName, setGpuName] = useState("NVIDIA RTX 4090");
+
+  const {
+    writeContract,
+    isPending: isRegistering,
+    data: hash,
+    error: writeError,
+  } = useWriteContract();
+
+  const { isLoading: isConfirming } = useWaitForTransactionReceipt({ hash });
+
+  useEffect(() => {
+    if (writeError) {
+      toast.error(writeError.message || "Registration failed");
+    }
+  }, [writeError]);
 
   useEffect(() => {
     if (!address) return;
@@ -38,12 +72,40 @@ export default function ProviderPage() {
       }
     };
     fetchProvider();
-  }, [address]);
+  }, [address, hash]);
 
-  const copyCommand = () => {
-    navigator.clipboard.writeText("cd scripts && python gpu_provider.py");
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  useEffect(() => {
+    const fetchProviders = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/providers`);
+        if (res.ok) setProviders(await res.json());
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchProviders();
+    const interval = setInterval(fetchProviders, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleRegister = () => {
+    if (!isConnected) {
+      toast.info("Connect wallet first");
+      return;
+    }
+    const stake = BigInt(Number(stakeAmount) * 1e18);
+    writeContract({
+      address: GPU_REGISTRY_ADDRESS,
+      abi: gpuRegistryAbi,
+      functionName: "registerProvider",
+      args: [stake, gpuName],
+      value: stake,
+    });
+  };
+
+  const toggleProvider = () => {
+    setProviderRunning(!providerRunning);
+    toast.success(providerRunning ? "Provider stopped" : "Provider started (demo mode)");
   };
 
   return (
@@ -53,70 +115,142 @@ export default function ProviderPage() {
       <main className="flex-1 container mx-auto px-4 py-10">
         <div className="mb-8">
           <h1 className="text-4xl font-black uppercase tracking-tight md:text-5xl">
-            Provider
+            Provider Network
           </h1>
           <p className="mt-2 font-mono text-sm text-muted-foreground">
-            Run a GPU provider daemon and earn XDC for compute jobs.
+            Share your GPU and earn DICO tokens for every job you complete.
           </p>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">
+            {/* Register Section */}
             <Card>
               <CardHeader>
-                <CardTitle>Quick Start</CardTitle>
+                <CardTitle>Register Your GPU</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="font-mono text-sm text-muted-foreground">
-                  On a machine with Docker and (optionally) a GPU, clone the repo and run:
-                </p>
-
-                <div className="flex items-center justify-between border-2 border-black bg-black p-4 font-mono text-sm text-white">
-                  <code>cd scripts && python gpu_provider.py</code>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={copyCommand}
-                    className="border-white text-white hover:bg-white hover:text-black"
-                  >
-                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                  </Button>
-                </div>
-
-                <div className="space-y-2 font-mono text-xs text-muted-foreground">
-                  <div className="flex items-start gap-2">
-                    <Terminal className="mt-0.5 h-4 w-4" />
-                    <span>The daemon listens for JobSubmitted events on XDC Apothem.</span>
+                {!isConnected ? (
+                  <div className="font-mono text-sm text-muted-foreground">
+                    Connect your wallet to register as a provider.
                   </div>
-                  <div className="flex items-start gap-2">
-                    <Terminal className="mt-0.5 h-4 w-4" />
-                    <span>It claims the job, pulls Docker images, runs containers, and submits results.</span>
+                ) : provider?.is_registered ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-green-500">REGISTERED</Badge>
+                      <span className="font-mono text-sm font-bold">Your GPU is in the network</span>
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <div>
+                        <div className="font-mono text-xs text-muted-foreground">Stake</div>
+                        <div className="font-mono text-lg font-bold">{(Number(provider.stake) / 1e18).toFixed(2)} XDC</div>
+                      </div>
+                      <div>
+                        <div className="font-mono text-xs text-muted-foreground">Jobs Done</div>
+                        <div className="font-mono text-lg font-bold">{provider.total_jobs_completed}</div>
+                      </div>
+                      <div>
+                        <div className="font-mono text-xs text-muted-foreground">Status</div>
+                        <div className="font-mono text-lg font-bold">
+                          {provider.is_slashed ? "SLASHED" : "ACTIVE"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={toggleProvider}
+                        className={providerRunning ? "bg-red-500" : "bg-green-500"}
+                      >
+                        {providerRunning ? <Square className="h-4 w-4 mr-2" /> : <Play className="h-4 w-4 mr-2" />}
+                        {providerRunning ? "Stop Provider" : "Start Provider"}
+                      </Button>
+                      <Link href="/explorer">
+                        <Button variant="outline">View Jobs</Button>
+                      </Link>
+                    </div>
+                    <p className="font-mono text-xs text-muted-foreground">
+                      {providerRunning
+                        ? "Provider daemon running. It will auto-claim and execute jobs."
+                        : "Click 'Start Provider' to begin accepting jobs."}
+                    </p>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <Terminal className="mt-0.5 h-4 w-4" />
-                    <span>Heartbeats are signed and submitted on-chain every few seconds.</span>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="font-mono text-xs font-bold uppercase">Stake (XDC)</label>
+                        <input
+                          type="number"
+                          value={stakeAmount}
+                          onChange={(e) => setStakeAmount(e.target.value)}
+                          className="mt-1 w-full border-2 border-black px-3 py-2 font-mono text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-mono text-xs font-bold uppercase">GPU Name</label>
+                        <input
+                          type="text"
+                          value={gpuName}
+                          onChange={(e) => setGpuName(e.target.value)}
+                          className="mt-1 w-full border-2 border-black px-3 py-2 font-mono text-sm"
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      onClick={handleRegister}
+                      disabled={isRegistering || isConfirming}
+                      className="w-full"
+                    >
+                      <Zap className="h-4 w-4 mr-2" />
+                      {isRegistering ? "Waiting for wallet..." : isConfirming ? "Confirming..." : "Register Provider"}
+                    </Button>
+                    {hash && (
+                      <div className="border-2 border-black bg-[#e5e5e5] p-2 font-mono text-xs break-all">
+                        TX: {hash}
+                      </div>
+                    )}
                   </div>
-                </div>
+                )}
               </CardContent>
             </Card>
 
+            {/* Network Stats */}
             <Card>
               <CardHeader>
-                <CardTitle>Requirements</CardTitle>
+                <CardTitle>Network Providers</CardTitle>
               </CardHeader>
-              <CardContent className="grid gap-4 sm:grid-cols-2">
-                {[
-                  "Docker Engine installed",
-                  "Python 3.10+ with pip",
-                  "XDC Apothem gas funds",
-                  "GPURegistry registration + stake",
-                  "Public or LAN access to RPC endpoint",
-                ].map((req, i) => (
-                  <div key={i} className="flex items-center gap-2 font-mono text-sm">
-                    <div className="h-2 w-2 bg-black" />
-                    {req}
-                  </div>
-                ))}
+              <CardContent>
+                <div className="space-y-3">
+                  {providers.length === 0 && (
+                    <div className="py-8 text-center font-mono text-sm text-muted-foreground">
+                      No providers registered yet. Be the first!
+                    </div>
+                  )}
+                  {providers.map((p) => (
+                    <div
+                      key={p.address}
+                      className="flex items-center justify-between border-b border-black/10 pb-2 last:border-0"
+                    >
+                      <div>
+                        <div className="font-mono text-sm font-bold">
+                          {p.address.slice(0, 8)}...{p.address.slice(-6)}
+                        </div>
+                        <div className="font-mono text-xs text-muted-foreground">
+                          {p.is_registered ? "Registered" : "Not registered"}
+                          {p.is_slashed && " • Slashed"}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-mono text-sm font-bold">
+                          {(Number(p.stake) / 1e18).toFixed(2)} XDC
+                        </div>
+                        <div className="font-mono text-xs text-muted-foreground">
+                          {p.total_jobs_completed} jobs
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -140,7 +274,7 @@ export default function ProviderPage() {
                     <div>
                       <div className="font-mono text-xs font-bold uppercase text-muted-foreground">Balance</div>
                       <div className="font-mono text-lg font-bold">
-                        {balance ? `${Number(balance.value) / 1e18} XDC` : "—"}
+                        {balance ? `${(Number(balance.value) / 1e18).toFixed(4)} XDC` : "—"}
                       </div>
                     </div>
                   </>
@@ -148,41 +282,52 @@ export default function ProviderPage() {
               </CardContent>
             </Card>
 
-            {provider ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle>On-Chain Status</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-bold uppercase">Registered</span>
-                    <Badge variant={provider.is_registered ? "default" : "secondary"}>
-                      {provider.is_registered ? "YES" : "NO"}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-bold uppercase">Slashed</span>
-                    <Badge variant={provider.is_slashed ? "destructive" : "default"}>
-                      {provider.is_slashed ? "YES" : "NO"}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-bold uppercase">Stake</span>
-                    <span className="font-mono font-bold">{Number(provider.stake) / 1e18} XDC</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-bold uppercase">Jobs Completed</span>
-                    <span className="font-mono font-bold">{provider.total_jobs_completed}</span>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : isConnected ? (
-              <Card>
-                <CardContent className="py-8 text-center font-mono text-sm text-muted-foreground">
-                  This wallet is not registered as a provider.
-                </CardContent>
-              </Card>
-            ) : null}
+            <Card>
+              <CardHeader>
+                <CardTitle>Earnings</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-xs text-muted-foreground">DICO Balance</span>
+                  <span className="font-mono font-bold">0.00 DICO</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-xs text-muted-foreground">XDC Earned</span>
+                  <span className="font-mono font-bold">0.00 XDC</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-xs text-muted-foreground">Jobs Completed</span>
+                  <span className="font-mono font-bold">{provider?.total_jobs_completed || 0}</span>
+                </div>
+                <Badge variant="outline" className="w-full justify-center font-mono text-xs">
+                  Rewards distributed on job completion
+                </Badge>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 border-yellow-400">
+              <CardHeader className="bg-yellow-400 text-black">
+                <CardTitle>Why Provide?</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 pt-4 font-mono text-sm">
+                <div className="flex items-start gap-2">
+                  <Cpu className="h-4 w-4 mt-0.5 shrink-0" />
+                  <span>Monetize idle GPU time</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Activity className="h-4 w-4 mt-0.5 shrink-0" />
+                  <span>Earn DICO tokens per job</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Globe className="h-4 w-4 mt-0.5 shrink-0" />
+                  <span>Join global AI compute network</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <ArrowRight className="h-4 w-4 mt-0.5 shrink-0" />
+                  <span>Reputation builds over time</span>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </main>

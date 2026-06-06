@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { useReadContract } from "wagmi";
-import { Loader2, ExternalLink, ShieldCheck, QrCode } from "lucide-react";
+import { Loader2, ExternalLink, ShieldCheck, Download } from "lucide-react";
 import { formatEther } from "viem";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
@@ -202,10 +202,18 @@ export default function ReceiptPage() {
                       </Button>
                     </a>
 
-                    <Button className="w-full gap-2">
-                      <QrCode className="h-4 w-4" />
-                      Download Audit JSON
-                    </Button>
+                    {receipt.result_cid && (
+                      <a
+                        href={`${API_URL}/api/ipfs/download/${receipt.result_cid}`}
+                        download
+                        className="w-full"
+                      >
+                        <Button className="w-full gap-2 bg-green-600 hover:bg-green-700">
+                          <Download className="h-4 w-4" />
+                          Download Results
+                        </Button>
+                      </a>
+                    )}
                   </div>
                 </>
               ) : (

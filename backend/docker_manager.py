@@ -71,7 +71,7 @@ class DockerContainerManager:
                 timeout=5
             )
             return result.returncode == 0
-        except Exception as e:
+        except:
             return False
     
     def stop_container(self, job_id: int) -> bool:

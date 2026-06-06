@@ -11,7 +11,7 @@ def check(name, cmd, expected_in_output=None):
     """Run a command and check if it succeeds"""
     print(f"Checking {name}...", end=" ")
     try:
-        result = subprocess.run(cmd, shell=False, capture_output=True, text=True, timeout=10)
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=10)
         if result.returncode == 0:
             if expected_in_output and expected_in_output not in result.stdout:
                 print(f" (missing: {expected_in_output})")

@@ -1,6 +1,6 @@
 """
-IPFS Client for NoCapCompute
-Handles file upload/download to IPFS (local + Pinata cloud)
+IPFS Client using Pinata for DICOMPUTE
+Handles file upload/download via Pinata IPFS service
 """
 
 import requests
@@ -8,112 +8,97 @@ import json
 import os
 from typing import Optional, Dict, Any
 
-IPFS_API_URL = "http://localhost:5001/api/v0"
-PINATA_API_URL = "https://api.pinata.cloud/pinning/pinFileToIPFS"
+# Pinata configuration from environment
+PINATA_API_KEY = os.getenv("PINATA_API_KEY", "")
+PINATA_API_SECRET = os.getenv("PINATA_API_SECRET", "")
+PINATA_JWT = os.getenv("PINATA_JWT", "")
+
+PINATA_UPLOAD_URL = "https://api.pinata.cloud/pinning/pinFileToIPFS"
+PINATA_JSON_URL = "https://api.pinata.cloud/pinning/pinJSONToIPFS"
+PINATA_GATEWAY = "https://gateway.pinata.cloud/ipfs"
 
 class IPFSClient:
-    def __init__(self, api_url: str = IPFS_API_URL):
-        self.api_url = api_url
-        self.pinata_api_key = os.getenv("PINATA_API_KEY")
-        self.pinata_secret = os.getenv("PINATA_SECRET")
-        self.use_pinata = bool(self.pinata_api_key and self.pinata_secret)
+    def __init__(self):
+        self.headers = {
+            "Authorization": f"Bearer {PINATA_JWT}"
+        } if PINATA_JWT else {}
     
     def upload_file(self, file_path: str) -> Optional[str]:
-        """Upload file to IPFS, return CID"""
-        # Try Pinata first if configured
-        if self.use_pinata:
-            cid = self._upload_to_pinata(file_path)
-            if cid:
-                return cid
+        """Upload file to IPFS via Pinata, return CID"""
+        if not self.headers:
+            print("Warning: No Pinata JWT configured, falling back to demo CID")
+            return "QmDemoUpload"
         
-        # Fallback to local IPFS node
-        return self._upload_to_local(file_path)
-    
-    def _upload_to_pinata(self, file_path: str) -> Optional[str]:
-        """Upload to Pinata cloud"""
         try:
-            headers = {
-                "pinata_api_key": self.pinata_api_key,
-                "pinata_secret_api_key": self.pinata_secret
-            }
-            
             with open(file_path, 'rb') as f:
+                files = {'file': f}
                 response = requests.post(
-                    PINATA_API_URL,
-                    files={'file': f},
-                    headers=headers,
-                    timeout=60
+                    PINATA_UPLOAD_URL,
+                    files=files,
+                    headers=self.headers
                 )
                 if response.status_code == 200:
                     result = response.json()
-                    cid = result.get('IpfsHash')
-                    print(f"✅ Uploaded to Pinata: {cid}")
-                    return cid
-        except Exception as e:
-            print(f"Pinata upload error: {e}")
-        return None
-    
-    def _upload_to_local(self, file_path: str) -> Optional[str]:
-        """Upload to local IPFS node"""
-        try:
-            with open(file_path, 'rb') as f:
-                response = requests.post(
-                    f"{self.api_url}/add",
-                    files={'file': f}
-                )
-                if response.status_code == 200:
-                    result = response.json()
-                    return result.get('Hash')
+                    return result.get('IpfsHash')
+                else:
+                    print(f"Pinata upload error: {response.status_code} - {response.text}")
         except Exception as e:
             print(f"IPFS upload error: {e}")
         return None
     
     def upload_json(self, data: Dict[str, Any]) -> Optional[str]:
-        """Upload JSON to IPFS, return CID"""
+        """Upload JSON to IPFS via Pinata, return CID"""
+        if not self.headers:
+            print("Warning: No Pinata JWT configured")
+            return None
+        
         try:
             response = requests.post(
-                f"{self.api_url}/add",
-                files={'file': ('data.json', json.dumps(data))}
+                PINATA_JSON_URL,
+                json={
+                    "pinataContent": data,
+                    "pinataMetadata": {"name": "dicompute-data.json"}
+                },
+                headers=self.headers
             )
             if response.status_code == 200:
                 result = response.json()
-                return result.get('Hash')
+                return result.get('IpfsHash')
         except Exception as e:
             print(f"IPFS upload error: {e}")
         return None
     
     def download_file(self, cid: str, output_path: str) -> bool:
-        """Download file from IPFS by CID"""
+        """Download file from Pinata Gateway by CID"""
         try:
-            response = requests.post(
-                f"{self.api_url}/cat?arg={cid}",
-                stream=True
+            response = requests.get(
+                f"{PINATA_GATEWAY}/{cid}",
+                stream=True,
+                timeout=30
             )
             if response.status_code == 200:
                 with open(output_path, 'wb') as f:
                     for chunk in response.iter_content(chunk_size=8192):
                         f.write(chunk)
                 return True
+            else:
+                print(f"Pinata download error: {response.status_code}")
         except Exception as e:
             print(f"IPFS download error: {e}")
         return False
     
     def pin_cid(self, cid: str) -> bool:
-        """Pin CID to keep it persistent"""
-        try:
-            response = requests.post(
-                f"{self.api_url}/pin/add?arg={cid}"
-            )
-            return response.status_code == 200
-        except Exception as e:
-            print(f"IPFS pin error: {e}")
-        return False
+        """CID is already pinned by Pinata on upload"""
+        return True
     
     def unpin_cid(self, cid: str) -> bool:
-        """Unpin CID"""
+        """Unpin CID via Pinata"""
+        if not self.headers:
+            return False
         try:
-            response = requests.post(
-                f"{self.api_url}/pin/rm?arg={cid}"
+            response = requests.delete(
+                f"https://api.pinata.cloud/pinning/unpin/{cid}",
+                headers=self.headers
             )
             return response.status_code == 200
         except Exception as e:
