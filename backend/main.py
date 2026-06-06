@@ -197,6 +197,7 @@ async def list_jobs(
             "last_heartbeat_block": job.last_heartbeat_block,
             "result_cid": job.result_cid,
             "instruction_count": job.instruction_count,
+            "logs": job.logs,
             "created_at": job.created_at.isoformat()
         }
         for job in jobs
@@ -224,6 +225,7 @@ async def list_pending_jobs(db: Session = Depends(get_db)):
             "last_heartbeat_block": job.last_heartbeat_block,
             "result_cid": job.result_cid,
             "instruction_count": job.instruction_count,
+            "logs": job.logs,
             "created_at": job.created_at.isoformat()
         }
         for job in jobs
@@ -253,6 +255,7 @@ async def get_job(job_id: int, db: Session = Depends(get_db)):
         "last_heartbeat_block": job.last_heartbeat_block,
         "result_cid": job.result_cid,
         "instruction_count": job.instruction_count,
+        "logs": job.logs,
         "created_at": job.created_at.isoformat()
     }
 
