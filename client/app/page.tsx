@@ -16,31 +16,37 @@ export default function Home() {
         {/* Hero */}
         <section className="relative overflow-hidden border-b-2 border-black bg-[#f5f4f0]">
           <div className="container mx-auto px-4 py-20 md:py-32">
-            <div className="max-w-4xl">
-              <div className="mb-6 inline-block border-2 border-black bg-yellow-400 px-3 py-1 font-mono text-xs font-bold uppercase tracking-widest text-black">
-                XDC Apothem Testnet
+            <div className="grid items-center gap-0 md:grid-cols-[1fr_1fr]">
+              <div className="max-w-4xl">
+                <div className="mb-6 inline-block border-2 border-black bg-yellow-400 px-3 py-1 font-mono text-xs font-bold uppercase tracking-widest text-black">
+                  XDC Apothem Testnet
+                </div>
+                <h1 className="mb-6 text-5xl font-black uppercase leading-[0.9] tracking-tighter md:text-7xl lg:text-8xl">
+                  Verifiable
+                  <br />
+                  GPU Compute
+                </h1>
+                <p className="mb-10 max-w-2xl font-mono text-lg leading-relaxed text-muted-foreground md:text-xl">
+                  Submit ML training jobs. Providers execute them with Docker + GPU.
+                  Every heartbeat and result is cryptographically proven on-chain.
+                </p>
+                <div className="flex flex-wrap gap-4">
+                  <Link href="/wizard">
+                    <Button size="lg" className="gap-2">
+                      Submit Job
+                      <ArrowRight className="h-5 w-5" />
+                    </Button>
+                  </Link>
+                  <Link href="/explorer">
+                    <Button size="lg" variant="outline">
+                      Explore Jobs
+                    </Button>
+                  </Link>
+                </div>
               </div>
-              <h1 className="mb-6 text-5xl font-black uppercase leading-[0.9] tracking-tighter md:text-7xl lg:text-8xl">
-                Verifiable
-                <br />
-                GPU Compute
-              </h1>
-              <p className="mb-10 max-w-2xl font-mono text-lg leading-relaxed text-muted-foreground md:text-xl">
-                Submit ML training jobs. Providers execute them with Docker + GPU.
-                Every heartbeat and result is cryptographically proven on-chain.
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <Link href="/wizard">
-                  <Button size="lg" className="gap-2">
-                    Submit Job
-                    <ArrowRight className="h-5 w-5" />
-                  </Button>
-                </Link>
-                <Link href="/explorer">
-                  <Button size="lg" variant="outline">
-                    Explore Jobs
-                  </Button>
-                </Link>
+
+              <div className="relative hidden h-[600px] items-center justify-center overflow-hidden pr-0 md:flex">
+                <GlobeGpu className="h-full w-full max-h-[560px] max-w-[560px]" />
               </div>
             </div>
           </div>
