@@ -5,7 +5,7 @@ artifacts/
 cache/
 typechain/
 typechain-types/
-
+/agents
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 /agent
 

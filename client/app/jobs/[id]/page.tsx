@@ -59,7 +59,7 @@ export default function JobDetailPage() {
   const [heartbeats, setHeartbeats] = useState<HeartbeatData[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const { data: onChainJob } = useReadContract({
+  const { data: onChainJob, refetch: refetchJob } = useReadContract({
     address: JOB_ESCROW_ADDRESS,
     abi: jobEscrowAbi,
     functionName: "getJob",
@@ -80,7 +80,12 @@ export default function JobDetailPage() {
     };
 
     fetchJob();
-  }, [jobId]);
+    const interval = setInterval(() => {
+      fetchJob();
+      refetchJob();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [jobId, refetchJob]);
 
   useEffect(() => {
     const fetchHeartbeats = async () => {
