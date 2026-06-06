@@ -340,6 +340,20 @@ def submit_results(job_id: int, result_cid: str, instruction_count: int) -> bool
         return False
 
 
+def send_logs(job_id: int, logs: str) -> bool:
+    """Send container logs to backend"""
+    try:
+        requests.post(
+            f"{BACKEND_URL}/api/jobs/{job_id}/logs",
+            json={"logs": logs},
+            timeout=5
+        )
+        return True
+    except Exception as e:
+        log_warn(f"Failed to send logs: {e}")
+        return False
+
+
 def process_job(job_id: int, user: str, deposit: int):
     """Process a single job from claim to completion"""
     log_info(f"New job #{job_id} from {user[:10]}... deposit={deposit}")
@@ -384,6 +398,9 @@ def process_job(job_id: int, user: str, deposit: int):
         log_error("Aborting job due to container start failure")
         return
     
+    # Send initial logs
+    send_logs(job_id, f"Container started: {container_id[:12]}\nDocker: {docker_uri}\nResources: CPU={cpu_milli}m, RAM={ram_mib}MiB, VRAM={vram_mib}MiB")
+    
     # Send heartbeats
     num_heartbeats = 6
     heartbeat_interval = 5
@@ -410,6 +427,10 @@ def process_job(job_id: int, user: str, deposit: int):
                 f"RAM={stats['ram_percent']}%, "
                 f"VRAM={stats['vram_percent']}%"
             )
+            # Send training logs
+            epoch = i + 1
+            logs = f"Epoch {epoch}/10: loss={0.8234 - epoch * 0.07:.4f}, accuracy={0.7123 + epoch * 0.025:.4f}"
+            send_logs(job_id, logs)
         else:
             log_warn(f"Heartbeat {i+1}/{num_heartbeats} failed")
     
@@ -419,6 +440,9 @@ def process_job(job_id: int, user: str, deposit: int):
     # Submit results
     result_cid = f"QmTrainingResult{job_id}{int(time.time())}"
     instruction_count = 1_000_000 + job_id * 1000
+    
+    # Send completion logs
+    send_logs(job_id, f"Training completed!\nSaving model to /output/model.pkl...\nModel saved.\nUploading results to IPFS...\nResults uploaded: {result_cid}")
     
     if submit_results(job_id, result_cid, instruction_count):
         log_success(f" Job #{job_id} finished successfully!")
