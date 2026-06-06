@@ -396,8 +396,14 @@ async def create_job(data: JobCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="ram_mib must be positive")
     if data.duration_blocks <= 0:
         raise HTTPException(status_code=400, detail="duration_blocks must be positive")
-    if data.max_price_per_block <= 0:
-        raise HTTPException(status_code=400, detail="max_price_per_block must be positive")
+    
+    # Convert string to int for comparison
+    try:
+        max_price = int(data.max_price_per_block)
+        if max_price <= 0:
+            raise HTTPException(status_code=400, detail="max_price_per_block must be positive")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="max_price_per_block must be a valid number")
     job = Job(
         chain_job_id=data.chain_job_id,
         user_address=data.user_address,

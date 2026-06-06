@@ -162,7 +162,7 @@ def run_container(job_id: int, image_uri: str, cpu_milli: int, ram_mib: int) -> 
                 cmd.extend(["--gpus", "all"])
                 gpu_available = True
                 log_info("GPU support enabled")
-        except:
+        except Exception as e:
             pass
         
         if not gpu_available:
