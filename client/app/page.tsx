@@ -25,13 +25,13 @@ export default function Home() {
                 GPU Compute
               </h1>
               <p className="mb-10 max-w-2xl font-mono text-lg leading-relaxed text-muted-foreground md:text-xl">
-                Submit ML training jobs. Providers execute them with Docker + GPU.
-                Every heartbeat and result is cryptographically proven on-chain.
+                Browse GPUs. Train your models. Download results.
+                Every job is cryptographically proven on the XDC blockchain.
               </p>
               <div className="flex flex-wrap gap-4">
-                <Link href="/wizard">
+                <Link href="/marketplace">
                   <Button size="lg" className="gap-2">
-                    Submit Job
+                    Browse GPUs
                     <ArrowRight className="h-5 w-5" />
                   </Button>
                 </Link>

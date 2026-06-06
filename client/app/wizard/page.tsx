@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,17 +12,31 @@ import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagm
 import { JOB_ESCROW_ADDRESS, jobEscrowAbi } from "@/lib/contracts/JobEscrow";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
-import { Zap } from "lucide-react";
+import { Zap, ArrowLeft, Cpu, Upload } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
-export default function WizardPage() {
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+
+function WizardContent() {
   const { isConnected, address } = useAccount();
+  const searchParams = useSearchParams();
+
+  const selectedProvider = searchParams.get("provider");
+  const selectedGPU = searchParams.get("gpu");
+  const selectedPrice = searchParams.get("price");
+  const selectedVram = searchParams.get("vram");
+  const selectedCuda = searchParams.get("cuda");
+
   const [dockerUri, setDockerUri] = useState("");
   const [cpu, setCpu] = useState([1000]);
   const [ram, setRam] = useState([1024]);
   const [vram, setVram] = useState([0]);
   const [duration, setDuration] = useState([10]);
   const [price, setPrice] = useState(["1000000000000000"]);
+  const [datasetFile, setDatasetFile] = useState<File | null>(null);
+  const [datasetCid, setDatasetCid] = useState<string | null>(null);
+  const [uploadingDataset, setUploadingDataset] = useState(false);
 
   const {
     writeContract,
@@ -57,6 +71,37 @@ export default function WizardPage() {
     setDuration([10]);
     setPrice(["1000000000000000"]);
     toast.success("Demo data filled");
+  };
+
+  const handleDatasetUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setDatasetFile(file);
+    setUploadingDataset(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch(`${API_URL}/api/ipfs/upload`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setDatasetCid(data.cid);
+        toast.success(`Dataset uploaded: ${data.cid.slice(0, 20)}...`);
+      } else {
+        toast.error("Upload failed");
+      }
+    } catch (err) {
+      toast.error("Upload error");
+      console.error(err);
+    } finally {
+      setUploadingDataset(false);
+    }
   };
 
   const estimatedCost = (BigInt(duration[0]) * BigInt(price[0])).toString();
@@ -114,10 +159,46 @@ export default function WizardPage() {
               Define your Docker workload and lock a deposit in the escrow contract.
             </p>
           </div>
-          <Button variant="outline" onClick={fillDemo}>
-            Fill Demo Data
-          </Button>
+          <div className="flex gap-2">
+            <Link href="/marketplace">
+              <Button variant="outline" className="gap-2">
+                <ArrowLeft className="h-4 w-4" />
+                Back to GPUs
+              </Button>
+            </Link>
+            <Button variant="outline" onClick={fillDemo}>
+              Fill Demo Data
+            </Button>
+          </div>
         </div>
+
+        {/* Selected GPU Card */}
+        {selectedGPU && (
+          <Card className="mb-6 border-2 border-yellow-400 bg-yellow-50">
+            <CardContent className="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center border-2 border-black bg-black text-white">
+                  <Cpu className="h-6 w-6" />
+                </div>
+                <div>
+                  <div className="font-mono text-xs font-bold uppercase text-muted-foreground">
+                    Selected GPU
+                  </div>
+                  <div className="text-xl font-black">{decodeURIComponent(selectedGPU)}</div>
+                  <div className="font-mono text-xs text-muted-foreground">
+                    Provider: {selectedProvider?.slice(0, 8)}...{selectedProvider?.slice(-6)} • {selectedVram}GB VRAM • {selectedCuda} CUDA cores
+                  </div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="font-mono text-xs text-muted-foreground">PRICE</div>
+                <div className="text-2xl font-black text-green-600">
+                  ${selectedPrice}/hr
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Form */}
@@ -138,6 +219,42 @@ export default function WizardPage() {
                   />
                   <p className="font-mono text-xs text-muted-foreground">
                     The provider will pull and run this image.
+                  </p>
+                </div>
+
+                {/* Dataset Upload */}
+                <div className="space-y-2">
+                  <Label className="font-mono text-xs font-bold uppercase tracking-wider">
+                    Dataset / Training Script (Optional)
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="file"
+                      onChange={handleDatasetUpload}
+                      className="hidden"
+                      id="dataset-upload"
+                      accept=".py,.zip,.tar,.tar.gz,.json,.csv"
+                    />
+                    <label
+                      htmlFor="dataset-upload"
+                      className="flex-1 cursor-pointer border-2 border-dashed border-black bg-[#f7f7f5] px-4 py-3 font-mono text-sm transition-colors hover:bg-yellow-50"
+                    >
+                      {datasetFile ? (
+                        <span className="font-bold">{datasetFile.name}</span>
+                      ) : uploadingDataset ? (
+                        <span className="text-muted-foreground">Uploading to IPFS...</span>
+                      ) : (
+                        <span className="text-muted-foreground">Click to upload .py, .zip, .tar, .json, .csv</span>
+                      )}
+                    </label>
+                  </div>
+                  {datasetCid && (
+                    <div className="border-2 border-black bg-[#e5e5e5] p-2 font-mono text-xs break-all">
+                      IPFS CID: {datasetCid}
+                    </div>
+                  )}
+                  <p className="font-mono text-xs text-muted-foreground">
+                    Uploaded files are stored on IPFS and mounted into the container at /dataset.
                   </p>
                 </div>
 
@@ -262,5 +379,19 @@ export default function WizardPage() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function WizardPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen flex-col bg-[#f7f7f5]">
+        <Navigation />
+        <main className="flex flex-1 items-center justify-center font-mono">Loading wizard...</main>
+        <Footer />
+      </div>
+    }>
+      <WizardContent />
+    </Suspense>
   );
 }

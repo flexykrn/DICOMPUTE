@@ -10,7 +10,7 @@ import { Footer } from "@/components/Footer";
 import Link from "next/link";
 import { useReadContract } from "wagmi";
 import { JOB_ESCROW_ADDRESS, jobEscrowAbi } from "@/lib/contracts/JobEscrow";
-import { Loader2, ExternalLink, FileCheck } from "lucide-react";
+import { Loader2, ExternalLink, FileCheck, Download } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 
@@ -287,6 +287,18 @@ export default function JobDetailPage() {
               <CardContent className="space-y-3">
                 {job.state === "completed" && (
                   <>
+                    {job.result_cid && (
+                      <a
+                        href={`${API_URL}/api/ipfs/download/${job.result_cid}`}
+                        download
+                      >
+                        <Button className="w-full gap-2 bg-green-600 hover:bg-green-700">
+                          <Download className="h-4 w-4" />
+                          Download Results
+                        </Button>
+                      </a>
+                    )}
+
                     <Link href={`/receipts/${job.chain_job_id}`}>
                       <Button className="w-full">
                         View ProofReceipt NFT
