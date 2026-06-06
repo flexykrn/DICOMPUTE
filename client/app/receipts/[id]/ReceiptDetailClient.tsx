@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+
 export default function ReceiptDetailClient({ tokenId }: { tokenId: string }) {
   const [receipt, setReceipt] = useState<any>(null);
 
   useEffect(() => {
-    fetch(`http://localhost:8001/api/receipts/${tokenId}`)
+    fetch(`${API_URL}/api/receipts/${tokenId}`)
       .then(r => r.json())
       .then(setReceipt)
       .catch(console.error);

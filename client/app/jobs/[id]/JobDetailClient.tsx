@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+
 export default function JobDetailClient({ jobId }: { jobId: string }) {
   const [job, setJob] = useState<any>(null);
 
   useEffect(() => {
-    fetch(`http://localhost:8001/api/jobs/${jobId}`)
+    fetch(`${API_URL}/api/jobs/${jobId}`)
       .then(r => r.json())
       .then(setJob)
       .catch(console.error);
