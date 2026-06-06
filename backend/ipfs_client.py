@@ -1,4 +1,5 @@
 """
+import os
 IPFS Client using Pinata for DICOMPUTE
 Handles file upload/download via Pinata IPFS service
 """
