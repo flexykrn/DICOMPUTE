@@ -5,12 +5,14 @@ Matches jobs to available GPU providers
 
 import time
 import threading
+import os
 from typing import Optional, List
 from sqlalchemy.orm import Session
 from models import Job
 from database import get_db
 from gpu_provider import gpu_manager
 from docker_manager import docker_manager
+from ipfs_client import ipfs_client
 
 class JobScheduler:
     """Schedules jobs to GPU providers"""
@@ -82,12 +84,32 @@ class JobScheduler:
                         job.provider_address = provider_address
                         db.commit()
                         
+                        # Download IPFS dataset if input_data_cid is set
+                        dataset_path = None
+                        if hasattr(job, 'input_data_cid') and job.input_data_cid:
+                            dataset_dir = f"/tmp/dicompute-datasets/{job.input_data_cid}"
+                            dataset_path = os.path.join(dataset_dir, "data")
+                            os.makedirs(dataset_path, exist_ok=True)
+                            print(f" Downloading dataset {job.input_data_cid} for job #{job.chain_job_id}")
+                            try:
+                                success = ipfs_client.download_file(job.input_data_cid, os.path.join(dataset_dir, "dataset"))
+                                if success:
+                                    print(f" Dataset downloaded to {dataset_path}")
+                                else:
+                                    print(f" Dataset download failed, continuing without dataset mount")
+                                    dataset_path = None
+                            except Exception as e:
+                                print(f" Dataset download error: {e}")
+                                dataset_path = None
+                        
                         # Start Docker container
                         print(f" Starting Docker container for job #{job.chain_job_id}")
                         container_id = docker_manager.run_container(
                             job_id=job.chain_job_id,
                             docker_uri=job.docker_uri,
-                            gpu_id="0"
+                            gpu_id="0",
+                            dataset_cid=job.input_data_cid if hasattr(job, 'input_data_cid') else None,
+                            expected_output=job.expected_output if hasattr(job, 'expected_output') else None
                         )
                         
                         if container_id:

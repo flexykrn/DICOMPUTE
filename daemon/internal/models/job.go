@@ -21,6 +21,8 @@ type JobSpec struct {
 	VRAMMiB          uint64  `json:"vram_mib"`
 	DurationBlocks   uint64  `json:"duration_blocks"`
 	MaxPricePerBlock uint64  `json:"max_price_per_block"`
+	InputDataCid     string  `json:"input_data_cid,omitempty"`
+	ExpectedOutput   string  `json:"expected_output,omitempty"`
 }
 
 // Job represents a compute job assignment from the backend
