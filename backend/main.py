@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List, Optional, Dict
 from pydantic import BaseModel
 from database import get_db, init_db
 from models import Job, Heartbeat, Provider, Receipt
@@ -9,6 +9,7 @@ import os
 import asyncio
 import time
 import logging
+from datetime import datetime
 from dotenv import load_dotenv
 
 # Configure logging
@@ -146,6 +147,18 @@ async def store_heartbeat(job_id: int, data: HeartbeatCreate, db: Session = Depe
     db.add(heartbeat)
     job.last_heartbeat_block = data.block_number
     db.commit()
+    
+    # Broadcast to WebSocket clients
+    heartbeat_data = {
+        "block_number": data.block_number,
+        "uptime_seconds": data.uptime_seconds,
+        "cpu_percent": data.cpu_percent,
+        "ram_percent": data.ram_percent,
+        "vram_percent": data.vram_percent,
+        "timestamp": datetime.utcnow().isoformat()
+    }
+    await broadcast_heartbeat(str(job_id), heartbeat_data)
+    
     return {"ok": True}
 
 @app.get("/api/jobs/{job_id}/heartbeats", response_model=List[HeartbeatResponse])
