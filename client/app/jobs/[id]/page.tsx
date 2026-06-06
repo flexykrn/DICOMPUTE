@@ -97,6 +97,31 @@ export default function JobDetailPage() {
     return () => clearInterval(interval);
   }, [jobId]);
 
+  // WebSocket for real-time heartbeats
+  useEffect(() => {
+    const ws = new WebSocket(`ws://localhost:8001/ws/jobs/${jobId}`);
+    
+    ws.onopen = () => {
+      console.log('WebSocket connected');
+      ws.send(JSON.stringify({ action: 'subscribe' }));
+    };
+    
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'heartbeat') {
+        setHeartbeats(prev => [...prev, data.data]);
+      }
+    };
+    
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+    
+    return () => {
+      ws.close();
+    };
+  }, [jobId]);
+
   if (loading) {
     return (
       <div className="flex min-h-screen flex-col bg-[#f7f7f5]">

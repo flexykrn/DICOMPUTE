@@ -530,6 +530,26 @@ async def update_job_status(job_id: int, data: dict = Body(...), db: Session = D
     db.commit()
     return {"success": True, "job_id": job_id, "state": job.state}
 
+@app.post("/api/jobs/{job_id}/cancel")
+async def cancel_job(job_id: int, db: Session = Depends(get_db)):
+    """Cancel a pending job and refund deposit"""
+    job = db.query(Job).filter(Job.chain_job_id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    if job.state != "pending":
+        raise HTTPException(status_code=400, detail=f"Cannot cancel job in {job.state} state. Only pending jobs can be cancelled.")
+    
+    job.state = "cancelled"
+    db.commit()
+    
+    return {
+        "success": True,
+        "job_id": job_id,
+        "state": "cancelled",
+        "message": "Job cancelled successfully. Refund will be processed on-chain."
+    }
+
 @app.post("/api/jobs/{job_id}/result")
 async def submit_job_result(job_id: int, data: dict = Body(...), db: Session = Depends(get_db)):
     """Submit job result from provider daemon"""
