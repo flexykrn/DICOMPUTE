@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { usePathname } from "next/navigation";
+import { useAccount, useBalance } from "wagmi";
+import { Coins } from "lucide-react";
 
 const navLinks = [
   { href: "/", label: "HOME" },
@@ -10,13 +12,13 @@ const navLinks = [
   { href: "/wizard", label: "SUBMIT" },
   { href: "/explorer", label: "EXPLORE" },
   { href: "/dashboard", label: "DASHBOARD" },
-  { href: "/distributed", label: "DISTRIBUTED" },
-  { href: "/federated", label: "FEDERATED" },
   { href: "/provider", label: "PROVIDER" },
 ];
 
 export function Navigation() {
   const pathname = usePathname();
+  const { address } = useAccount();
+  const { data: xdcBalance } = useBalance({ address, query: { enabled: !!address } });
 
   return (
     <header className="sticky top-0 z-50 border-b-2 border-black bg-[#f7f7f5]">
@@ -37,7 +39,7 @@ export function Navigation() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`px-4 py-2 text-sm font-bold tracking-wide border-2 transition-all ${
+                className={`px-3 py-2 text-xs font-bold tracking-wide border-2 transition-all ${
                   active
                     ? "border-black bg-black text-white"
                     : "border-transparent hover:border-black hover:bg-white"
@@ -50,6 +52,12 @@ export function Navigation() {
         </nav>
 
         <div className="flex items-center gap-3">
+          {address && xdcBalance && (
+            <div className="hidden sm:flex items-center gap-2 border-2 border-black bg-yellow-400 px-3 py-1.5 font-mono text-xs font-bold">
+              <Coins className="h-3 w-3" />
+              {parseFloat(xdcBalance.formatted).toFixed(2)} XDC
+            </div>
+          )}
           <ConnectButton />
         </div>
       </div>

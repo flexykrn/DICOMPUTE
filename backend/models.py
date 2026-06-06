@@ -24,6 +24,7 @@ class Job(Base):
     last_heartbeat_block = Column(BigInteger)
     result_cid = Column(Text)
     instruction_count = Column(BigInteger)
+    logs = Column(Text, nullable=True)  # Container logs/output
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

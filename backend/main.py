@@ -612,6 +612,35 @@ async def get_job_result(job_id: int):
     finally:
         db.close()
 
+@app.post("/api/jobs/{job_id}/logs")
+async def append_job_logs(job_id: int, data: dict = Body(...), db: Session = Depends(get_db)):
+    """Append logs to a job (from provider daemon)"""
+    job = db.query(Job).filter(Job.chain_job_id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    new_logs = data.get("logs", "")
+    if job.logs:
+        job.logs = job.logs + "\n" + new_logs
+    else:
+        job.logs = new_logs
+    db.commit()
+    return {"success": True, "job_id": job_id, "lines_added": new_logs.count("\n") + 1}
+
+@app.get("/api/jobs/{job_id}/logs")
+async def get_job_logs(job_id: int, db: Session = Depends(get_db)):
+    """Get logs for a job"""
+    job = db.query(Job).filter(Job.chain_job_id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    return {
+        "job_id": job_id,
+        "state": job.state,
+        "logs": job.logs or "",
+        "lines": (job.logs or "").count("\n") + 1 if job.logs else 0
+    }
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
