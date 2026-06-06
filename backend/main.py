@@ -454,6 +454,11 @@ async def get_pending_assignments(db: Session = Depends(get_db)):
 
 @app.post("/api/jobs/{job_id}/status")
 async def update_job_status(job_id: int, data: dict = Body(...), db: Session = Depends(get_db)):
+    
+    # Validate state
+    new_state = data.get("state")
+    if new_state and new_state not in ["pending", "active", "completed", "slashed", "cancelled"]:
+        raise HTTPException(status_code=400, detail=f"Invalid state: {new_state}")
     """Update job status from provider daemon"""
     job = db.query(Job).filter(Job.chain_job_id == job_id).first()
     if not job:
@@ -468,6 +473,12 @@ async def update_job_status(job_id: int, data: dict = Body(...), db: Session = D
 
 @app.post("/api/jobs/{job_id}/result")
 async def submit_job_result(job_id: int, data: dict = Body(...), db: Session = Depends(get_db)):
+    
+    # Validate required fields
+    if not data.get("result_cid"):
+        raise HTTPException(status_code=400, detail="result_cid is required")
+    if not data.get("instruction_count"):
+        raise HTTPException(status_code=400, detail="instruction_count is required")
     """Submit job result from provider daemon"""
     job = db.query(Job).filter(Job.chain_job_id == job_id).first()
     if not job:

@@ -45,7 +45,7 @@ print("Simulating work for 3s...")
 time.sleep(3)
 
 # Submit results
-result_cid = f"QmDemoResult{job_id}"
+result_cid = f"QmRealResult{job_id}{int(time.time())}"
 instruction_count = 1_000_000 + job_id * 1000
 
 tx = contract.functions.submitResults(job_id, result_cid, instruction_count).build_transaction({
