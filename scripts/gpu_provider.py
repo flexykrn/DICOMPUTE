@@ -311,6 +311,57 @@ def send_heartbeat(
         return False
 
 
+def capture_container_logs(job_id: int) -> Optional[str]:
+    """Capture Docker container logs and return as CID"""
+    container_name = f"nocap-job-{job_id}"
+    
+    try:
+        # Get container logs
+        result = subprocess.run(
+            ["docker", "logs", container_name],
+            capture_output=True, text=True, timeout=30
+        )
+        
+        if result.returncode != 0:
+            log_error(f"Failed to get logs: {result.stderr}")
+            return None
+        
+        logs = result.stdout
+        if not logs:
+            log_warn("No logs captured from container")
+            return None
+        
+        # Save logs to temp file
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.log', delete=False) as f:
+            f.write(logs)
+            log_path = f.name
+        
+        # Upload to IPFS (local node)
+        try:
+            with open(log_path, 'rb') as f:
+                response = requests.post(
+                    "http://localhost:5001/api/v0/add",
+                    files={'file': f},
+                    timeout=30
+                )
+                if response.status_code == 200:
+                    cid = response.json().get('Hash')
+                    log_success(f"Logs uploaded to IPFS: {cid}")
+                    return cid
+        except Exception as e:
+            log_error(f"IPFS upload failed: {e}")
+        finally:
+            # Cleanup temp file
+            import os
+            os.unlink(log_path)
+        
+        return None
+    except Exception as e:
+        log_error(f"Log capture failed: {e}")
+        return None
+
+
 def submit_results(job_id: int, result_cid: str, instruction_count: int) -> bool:
     """Submit job results to blockchain"""
     try:
@@ -416,8 +467,14 @@ def process_job(job_id: int, user: str, deposit: int):
     # Stop container
     stop_container(job_id)
     
-    # Submit results
-    result_cid = f"QmTrainingResult{job_id}{int(time.time())}"
+    # Capture real Docker logs
+    log_info("Capturing container logs...")
+    result_cid = capture_container_logs(job_id)
+    
+    if not result_cid:
+        log_warn("Failed to capture logs, using fallback CID")
+        result_cid = f"QmTrainingResult{job_id}{int(time.time())}"
+    
     instruction_count = 1_000_000 + job_id * 1000
     
     if submit_results(job_id, result_cid, instruction_count):

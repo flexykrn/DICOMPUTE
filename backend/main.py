@@ -406,15 +406,70 @@ async def create_job(data: JobCreate, db: Session = Depends(get_db)):
         "created_at": job.created_at.isoformat()
     }
 
-# WebSocket for real-time updates
+# WebSocket for real-time job updates
 from fastapi import WebSocket
+import json
+
+# Active WebSocket connections
+active_connections: Dict[str, WebSocket] = {}
+
+@app.websocket("/ws/jobs/{job_id}")
+async def websocket_job(websocket: WebSocket, job_id: str):
+    """WebSocket for real-time job heartbeat streaming"""
+    await websocket.accept()
+    active_connections[job_id] = websocket
+    
+    try:
+        # Send initial job status
+        db = next(get_db())
+        job = db.query(Job).filter(Job.chain_job_id == int(job_id)).first()
+        if job:
+            await websocket.send_json({
+                "type": "job_status",
+                "job_id": job_id,
+                "state": job.state,
+                "provider": job.provider_address,
+                "result_cid": job.result_cid
+            })
+        
+        # Keep connection alive and listen for updates
+        while True:
+            data = await websocket.receive_text()
+            message = json.loads(data)
+            
+            if message.get("action") == "subscribe":
+                await websocket.send_json({
+                    "type": "subscribed",
+                    "job_id": job_id,
+                    "message": "Listening for heartbeat updates"
+                })
+    except Exception as e:
+        print(f"WebSocket error for job {job_id}: {e}")
+    finally:
+        if job_id in active_connections:
+            del active_connections[job_id]
+        await websocket.close()
+
+
+async def broadcast_heartbeat(job_id: str, heartbeat_data: dict):
+    """Broadcast heartbeat to all connected clients for a job"""
+    if job_id in active_connections:
+        try:
+            await active_connections[job_id].send_json({
+                "type": "heartbeat",
+                "job_id": job_id,
+                "data": heartbeat_data
+            })
+        except Exception as e:
+            print(f"Failed to broadcast heartbeat: {e}")
+
 
 @app.websocket("/ws/jobs")
 async def websocket_jobs(websocket: WebSocket):
+    """General WebSocket for all jobs updates"""
     await websocket.accept()
     try:
         while True:
-            # Send current stats every 5 seconds
             await websocket.send_json({
                 "type": "ping",
                 "message": "Connected to DICOMPUTE real-time updates"
