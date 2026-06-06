@@ -108,3 +108,6 @@ class IPFSClient:
 
 # Global instance
 ipfs_client = IPFSClient()
+
+# Local IPFS node fallback (optional)
+LOCAL_IPFS_URL = os.getenv("LOCAL_IPFS_URL", "http://localhost:5001/api/v0")
