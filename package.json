@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "cd client && pnpm dev",
-    "build": "cd client && pnpm build",
-    "start": "cd client && pnpm start",
-    "lint": "cd client && pnpm lint"
+    "dev": "cd client && npm run dev",
+    "build": "cd client && npm run build",
+    "start": "cd client && npm run start",
+    "lint": "cd client && npm run lint"
   },
   "dependencies": {},
   "devDependencies": {}
