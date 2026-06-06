@@ -50,7 +50,7 @@ RPC_URL=https://erpc.apothem.network
 ```
 
 3. **Important**: You must register as a provider first!
-   - Visit http://localhost:3000/provider/register
+   - Visit http://localhost:3001/provider/register
    - Or stake directly via the GPURegistry contract
 
 ## Testing GPU Support
@@ -117,7 +117,7 @@ You should see:
 
 ### "Provider not registered"
 - You need to stake XDC and register via the frontend
-- Visit http://localhost:3000/provider/register
+- Visit http://localhost:3001/provider/register
 - Or call `registerProvider()` on GPURegistry contract
 
 ### "Low balance"
