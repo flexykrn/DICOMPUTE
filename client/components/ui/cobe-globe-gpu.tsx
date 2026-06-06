@@ -23,6 +23,7 @@ const GPU_PROVIDER_NODES: GPUProviderNode[] = [
 
 type GlobeGpuProps = {
   className?: string;
+  isDark?: boolean;
 };
 
 const MARKER_HIT_RADIUS = 16;
@@ -58,7 +59,7 @@ function projectVector(
   };
 }
 
-export function GlobeGpu({ className }: GlobeGpuProps) {
+export function GlobeGpu({ className, isDark = false }: GlobeGpuProps) {
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const [dimensions, setDimensions] = React.useState({ width: 0, height: 0 });
@@ -109,16 +110,16 @@ export function GlobeGpu({ className }: GlobeGpuProps) {
       width: dimensions.width * pixelRatio,
       height: dimensions.height * pixelRatio,
       devicePixelRatio: pixelRatio,
-      dark: 0,
+      dark: isDark ? 1 : 0,
       phi: 0,
       theta: 0.25,
       diffuse: 1.5,
       mapSamples: 16000,
-      mapBrightness: 2.6,
-      baseColor: [0.96, 0.95, 0.94],
+      mapBrightness: isDark ? 6 : 2.6,
+      baseColor: isDark ? [0.1, 0.1, 0.1] : [0.96, 0.95, 0.94],
       markerColor: [0.96, 0.8, 0],
-      glowColor: [0.96, 0.95, 0.94],
-      arcColor: [0.1, 0.1, 0.1],
+      glowColor: isDark ? [0.15, 0.15, 0.15] : [0.96, 0.95, 0.94],
+      arcColor: isDark ? [0.8, 0.8, 0.8] : [0.1, 0.1, 0.1],
       opacity: 1,
       scale: 1,
       markerElevation: 0.12,
@@ -146,7 +147,7 @@ export function GlobeGpu({ className }: GlobeGpuProps) {
       window.cancelAnimationFrame(animationFrame);
       globe.destroy();
     };
-  }, [dimensions.height, dimensions.width]);
+  }, [dimensions.height, dimensions.width, isDark]);
 
   React.useEffect(() => {
     const canvas = canvasRef.current;
@@ -219,10 +220,10 @@ export function GlobeGpu({ className }: GlobeGpuProps) {
             transform: "translate(-50%, -12px)",
           }}
         >
-          <div className="relative bg-[#0a0a0a] px-[12px] py-[8px] font-mono text-[#f5c800]">
+          <div className="relative bg-[var(--bg-card)] px-[12px] py-[8px] font-mono text-[var(--accent)]">
             <div className="text-xs uppercase tracking-[0.2em]">{activeNode.region}</div>
             <div className="mt-1 text-xs uppercase tracking-[0.2em]">{activeNode.jobs} jobs</div>
-            <div className="absolute left-1/2 top-full h-2 w-2 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-[#0a0a0a]" />
+            <div className="absolute left-1/2 top-full h-2 w-2 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-[var(--bg-card)]" />
           </div>
         </div>
       ) : null}

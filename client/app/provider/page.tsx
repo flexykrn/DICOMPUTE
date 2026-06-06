@@ -109,7 +109,7 @@ export default function ProviderPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f7f7f5]">
+    <div className="flex min-h-screen flex-col bg-[var(--bg-primary)]">
       <Navigation />
 
       <main className="flex-1 container mx-auto px-4 py-10">
@@ -138,19 +138,19 @@ export default function ProviderPage() {
                   <div className="space-y-4">
                     <div className="flex items-center gap-2">
                       <Badge className="bg-green-500">REGISTERED</Badge>
-                      <span className="font-mono text-sm font-bold">Your GPU is in the network</span>
+                      <span className="font-mono text-sm font-bold text-[var(--text-primary)]">Your GPU is in the network</span>
                     </div>
                     <div className="grid gap-4 sm:grid-cols-3">
                       <div>
-                        <div className="font-mono text-xs text-muted-foreground">Stake</div>
+                        <div className="font-mono text-xs text-[var(--text-secondary)]">Stake</div>
                         <div className="font-mono text-lg font-bold">{(Number(provider.stake) / 1e18).toFixed(2)} XDC</div>
                       </div>
                       <div>
-                        <div className="font-mono text-xs text-muted-foreground">Jobs Done</div>
+                        <div className="font-mono text-xs text-[var(--text-secondary)]">Jobs Done</div>
                         <div className="font-mono text-lg font-bold">{provider.total_jobs_completed}</div>
                       </div>
                       <div>
-                        <div className="font-mono text-xs text-muted-foreground">Status</div>
+                        <div className="font-mono text-xs text-[var(--text-secondary)]">Status</div>
                         <div className="font-mono text-lg font-bold">
                           {provider.is_slashed ? "SLASHED" : "ACTIVE"}
                         </div>
@@ -168,7 +168,7 @@ export default function ProviderPage() {
                         <Button variant="outline">View Jobs</Button>
                       </Link>
                     </div>
-                    <p className="font-mono text-xs text-muted-foreground">
+                    <p className="font-mono text-xs text-[var(--text-secondary)]">
                       {providerRunning
                         ? "Provider daemon running. It will auto-claim and execute jobs."
                         : "Click 'Start Provider' to begin accepting jobs."}
@@ -178,21 +178,21 @@ export default function ProviderPage() {
                   <div className="space-y-4">
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div>
-                        <label className="font-mono text-xs font-bold uppercase">Stake (XDC)</label>
+                        <label className="font-mono text-xs font-bold uppercase text-[var(--text-primary)]">Stake (XDC)</label>
                         <input
                           type="number"
                           value={stakeAmount}
                           onChange={(e) => setStakeAmount(e.target.value)}
-                          className="mt-1 w-full border-2 border-black px-3 py-2 font-mono text-sm"
+                          className="mt-1 w-full border-2 border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-2 font-mono text-sm text-[var(--text-primary)]"
                         />
                       </div>
                       <div>
-                        <label className="font-mono text-xs font-bold uppercase">GPU Name</label>
+                        <label className="font-mono text-xs font-bold uppercase text-[var(--text-primary)]">GPU Name</label>
                         <input
                           type="text"
                           value={gpuName}
                           onChange={(e) => setGpuName(e.target.value)}
-                          className="mt-1 w-full border-2 border-black px-3 py-2 font-mono text-sm"
+                          className="mt-1 w-full border-2 border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-2 font-mono text-sm text-[var(--text-primary)]"
                         />
                       </div>
                     </div>
@@ -205,7 +205,7 @@ export default function ProviderPage() {
                       {isRegistering ? "Waiting for wallet..." : isConfirming ? "Confirming..." : "Register Provider"}
                     </Button>
                     {hash && (
-                      <div className="border-2 border-black bg-[#e5e5e5] p-2 font-mono text-xs break-all">
+                      <div className="border-2 border-[var(--border-color)] bg-[var(--bg-secondary)] p-2 font-mono text-xs break-all text-[var(--text-primary)]">
                         TX: {hash}
                       </div>
                     )}
@@ -222,7 +222,7 @@ export default function ProviderPage() {
               <CardContent>
                 <div className="space-y-3">
                   {providers.length === 0 && (
-                    <div className="py-8 text-center font-mono text-sm text-muted-foreground">
+                    <div className="py-8 text-center font-mono text-sm text-[var(--text-secondary)]">
                       No providers registered yet. Be the first!
                     </div>
                   )}
@@ -235,7 +235,7 @@ export default function ProviderPage() {
                         <div className="font-mono text-sm font-bold">
                           {p.address.slice(0, 8)}...{p.address.slice(-6)}
                         </div>
-                        <div className="font-mono text-xs text-muted-foreground">
+                        <div className="font-mono text-xs text-[var(--text-secondary)]">
                           {p.is_registered ? "Registered" : "Not registered"}
                           {p.is_slashed && " • Slashed"}
                         </div>
@@ -244,7 +244,7 @@ export default function ProviderPage() {
                         <div className="font-mono text-sm font-bold">
                           {(Number(p.stake) / 1e18).toFixed(2)} XDC
                         </div>
-                        <div className="font-mono text-xs text-muted-foreground">
+                        <div className="font-mono text-xs text-[var(--text-secondary)]">
                           {p.total_jobs_completed} jobs
                         </div>
                       </div>
@@ -305,8 +305,8 @@ export default function ProviderPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-2 border-yellow-400">
-              <CardHeader className="bg-yellow-400 text-black">
+                <Card className="border-2 border-[#f5c800]">
+              <CardHeader className="bg-[#f5c800] text-[var(--text-primary)]">
                 <CardTitle>Why Provide?</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 pt-4 font-mono text-sm">

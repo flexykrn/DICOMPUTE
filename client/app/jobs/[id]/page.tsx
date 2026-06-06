@@ -185,10 +185,10 @@ export default function JobDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen flex-col bg-[#f7f7f5]">
+      <div className="flex min-h-screen flex-col bg-[var(--bg-primary)]">
         <Navigation />
         <main className="flex flex-1 items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin" />
+          <Loader2 className="h-8 w-8 animate-spin text-[var(--text-primary)]" />
         </main>
         <Footer />
       </div>
@@ -197,9 +197,9 @@ export default function JobDetailPage() {
 
   if (!job) {
     return (
-      <div className="flex min-h-screen flex-col bg-[#f7f7f5]">
+      <div className="flex min-h-screen flex-col bg-[var(--bg-primary)]">
         <Navigation />
-        <main className="flex flex-1 items-center justify-center font-mono">
+        <main className="flex flex-1 items-center justify-center font-mono text-[var(--text-primary)]">
           Job not found
         </main>
         <Footer />
@@ -210,11 +210,11 @@ export default function JobDetailPage() {
   const hasChainProof = onChainJob && onChainJob.state === 2;
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f7f7f5]">
+    <div className="flex min-h-screen flex-col bg-[var(--bg-primary)]">
       <Navigation />
 
       <main className="flex-1 container mx-auto px-4 py-10">
-        <div className="mb-6 flex items-center gap-2 font-mono text-xs text-muted-foreground">
+        <div className="mb-6 flex items-center gap-2 font-mono text-xs text-[var(--text-secondary)]">
           <Link href="/explorer" className="hover:underline">EXPLORER</Link>
           <span>/</span>
           <span className="font-bold text-black">JOB #{jobId}</span>
