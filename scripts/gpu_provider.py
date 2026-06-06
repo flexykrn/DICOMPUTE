@@ -28,7 +28,7 @@ load_dotenv(Path(__file__).parent / ".env")
 # Configuration
 PRIVATE_KEY = os.getenv("PROVIDER_KEY", "")
 JOB_ESCROW_ADDRESS = os.getenv("JOB_ESCROW_ADDRESS", "0x2Ff9B760510fc0aAd51a59f8aDA62F8B2631a075")
-BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8001")
 RPC_URL = os.getenv("RPC_URL", "https://erpc.apothem.network")
 
 # Validate config
