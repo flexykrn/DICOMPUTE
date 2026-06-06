@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { Toaster } from "sonner";
+import { ThemeProvider } from "@/context/ThemeContext";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
@@ -18,22 +19,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans`}>
-        <Providers>
-          {children}
-          <Toaster 
-            position="bottom-right"
-            toastOptions={{
-              style: {
-                border: "2px solid #000",
-                borderRadius: "0",
-                background: "#fff",
-                color: "#000",
-              },
-            }}
-          />
-        </Providers>
+        <ThemeProvider>
+          <Providers>
+            {children}
+            <Toaster
+              position="bottom-right"
+              toastOptions={{
+                style: {
+                  border: "2px solid var(--border-color)",
+                  borderRadius: "0",
+                  background: "var(--bg-secondary)",
+                  color: "var(--text-primary)",
+                },
+              }}
+            />
+          </Providers>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -78,7 +78,7 @@ export default function ExplorerPage() {
   const filteredJobs = filter ? jobs.filter((j) => j.state === filter) : jobs;
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f7f7f5]">
+    <div className="flex min-h-screen flex-col bg-[var(--bg-primary)]">
       <Navigation />
 
       <main className="flex-1 container mx-auto px-4 py-10">
@@ -116,14 +116,15 @@ export default function ExplorerPage() {
           </div>
         )}
 
-        <div className="mb-6 flex flex-wrap gap-2">
-          {filters.map((f) => (
-            <Button
-              key={f.key}
-              variant={filter === f.key ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilter(f.key)}
-            >
+          <div className="mb-6 flex flex-wrap gap-2">
+            {filters.map((f) => (
+              <Button
+                key={f.key}
+                variant={filter === f.key ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilter(f.key)}
+                className={filter === f.key ? "bg-[var(--bg-card)] text-[var(--text-on-card)] border-[var(--bg-card)]" : "bg-[var(--bg-primary)] text-[var(--text-primary)] border-[var(--border-color)]"}
+              >
               {f.label}
             </Button>
           ))}
@@ -136,14 +137,14 @@ export default function ExplorerPage() {
           </div>
         )}
 
-        <div className="grid gap-4">
-          {filteredJobs.map((job) => (
-            <Card key={job.chain_job_id} className="overflow-hidden">
+          <div className="grid gap-4">
+            {filteredJobs.map((job) => (
+              <Card key={job.chain_job_id} className="overflow-hidden border-2 border-[var(--border-color)] bg-[var(--bg-secondary)]">
               <CardContent className="p-0">
                 <div className="flex flex-col md:flex-row">
-                  <div className="flex-1 border-b-2 border-black p-4 md:border-b-0 md:border-r-2">
+                  <div className="flex-1 border-b-2 border-[var(--border-color)] p-4 md:border-b-0 md:border-r-2 text-[var(--text-primary)]">
                     <div className="mb-2 flex items-center gap-3">
-                      <span className="font-mono text-xs font-bold text-muted-foreground">
+                      <span className="font-mono text-xs font-bold text-[var(--text-secondary)]">
                         #{job.chain_job_id}
                       </span>
                       <Badge variant={getStatusVariant(job.state)}>
@@ -153,24 +154,24 @@ export default function ExplorerPage() {
                     <div className="mb-1 font-mono text-sm font-bold">
                       {job.docker_uri}
                     </div>
-                    <div className="font-mono text-xs text-muted-foreground">
+                    <div className="font-mono text-xs text-[var(--text-secondary)]">
                       USER: {job.user_address.slice(0, 8)}...{job.user_address.slice(-6)}
                     </div>
                     {job.provider_address && (
-                      <div className="font-mono text-xs text-muted-foreground">
+                      <div className="font-mono text-xs text-[var(--text-secondary)]">
                         PROVIDER: {job.provider_address.slice(0, 8)}...{job.provider_address.slice(-6)}
                       </div>
                     )}
                   </div>
 
-                  <div className="flex w-full flex-col justify-between gap-3 border-black p-4 md:w-80 md:border-l-2">
+                  <div className="flex w-full flex-col justify-between gap-3 border-[var(--border-color)] p-4 md:w-80 md:border-l-2 text-[var(--text-primary)]">
                     <div className="flex justify-between font-mono text-xs">
-                      <span className="text-muted-foreground">Deposit</span>
+                      <span className="text-[var(--text-secondary)]">Deposit</span>
                       <span className="font-bold">{(Number(job.deposit) / 1e18).toFixed(6)} XDC</span>
                     </div>
                     {job.result_cid && (
-                      <div className="font-mono text-xs">
-                        <span className="text-muted-foreground">Result: </span>
+                      <div className="font-mono text-xs text-[var(--text-primary)]">
+                        <span className="text-[var(--text-secondary)]">Result: </span>
                         <span className="break-all font-bold">{job.result_cid}</span>
                       </div>
                     )}
@@ -186,9 +187,9 @@ export default function ExplorerPage() {
           ))}
 
           {!loading && filteredJobs.length === 0 && (
-            <Card>
-              <CardContent className="py-16 text-center font-mono text-muted-foreground">
-                <Search className="mx-auto mb-4 h-8 w-8" />
+            <Card className="border-2 border-[var(--border-color)] bg-[var(--bg-secondary)]">
+              <CardContent className="py-16 text-center font-mono text-[var(--text-secondary)]">
+                <Search className="mx-auto mb-4 h-8 w-8 text-[var(--text-secondary)]" />
                 No jobs found.
               </CardContent>
             </Card>

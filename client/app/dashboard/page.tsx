@@ -79,7 +79,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f7f7f5]">
+    <div className="flex min-h-screen flex-col bg-[var(--bg-primary)]">
       <Navigation />
 
       <main className="flex-1 container mx-auto px-4 py-10">
@@ -96,19 +96,19 @@ export default function DashboardPage() {
         <div className="mb-10 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
           {loading && !stats
             ? Array.from({ length: 6 }).map((_, i) => (
-                <Card key={i}>
+                <Card key={i} className="border-2 border-[var(--border-color)] bg-[var(--bg-secondary)]">
                   <CardContent className="flex flex-col items-center justify-center py-6">
-                    <div className="h-8 w-24 animate-pulse bg-muted rounded" />
+                    <div className="h-8 w-24 animate-pulse bg-[var(--bg-secondary)] rounded" />
                   </CardContent>
                 </Card>
               ))
             : statCards.map((s) => (
-                <Card key={s.label}>
+                <Card key={s.label} className="border-2 border-[var(--border-color)] bg-[var(--bg-secondary)]">
                   <CardContent className="flex flex-col items-center justify-center py-6">
                     <div className={`mb-2 flex h-8 w-8 items-center justify-center ${s.color} text-white`}>
                       <s.icon className="h-4 w-4" />
                     </div>
-                    <div className="font-mono text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    <div className="font-mono text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">
                       {s.label}
                     </div>
                     <div className="text-3xl font-black">{s.value}</div>
@@ -130,7 +130,7 @@ export default function DashboardPage() {
               <CardContent>
                 <div className="space-y-3">
                   {recentJobs.length === 0 && !loading && (
-                    <div className="py-8 text-center font-mono text-sm text-muted-foreground">
+                    <div className="py-8 text-center font-mono text-sm text-[var(--text-secondary)]">
                       No recent activity.
                     </div>
                   )}
@@ -145,14 +145,14 @@ export default function DashboardPage() {
                         </div>
                         <div>
                           <div className="font-mono text-sm font-bold">{job.docker_uri}</div>
-                          <div className="font-mono text-xs text-muted-foreground">
-                            {job.user_address.slice(0, 8)}...{job.user_address.slice(-6)}
-                          </div>
-                        </div>
+                      <div className="font-mono text-xs text-[var(--text-secondary)]">
+                        {job.user_address.slice(0, 8)}...{job.user_address.slice(-6)}
                       </div>
-                      <div className="flex items-center gap-3">
-                        <Badge variant={getStatusVariant(job.state)}>{job.state}</Badge>
-                        <span className="font-mono text-xs text-muted-foreground">
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Badge variant={getStatusVariant(job.state)}>{job.state}</Badge>
+                    <span className="font-mono text-xs text-[var(--text-secondary)]">
                           {new Date(job.created_at).toLocaleDateString()}
                         </span>
                       </div>
@@ -165,27 +165,27 @@ export default function DashboardPage() {
 
           {/* Network Health */}
           <div className="space-y-6">
-            <Card className="border-2 border-black">
+            <Card className="border-2 border-[var(--border-color)] bg-[var(--bg-secondary)]">
               <CardHeader>
                 <CardTitle>Network Health</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between text-[var(--text-primary)]">
                   <span className="font-mono text-sm">Blockchain</span>
                   <Badge variant="default" className="font-mono">XDC Apothem</Badge>
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between text-[var(--text-primary)]">
                   <span className="font-mono text-sm">Status</span>
                   <div className="flex items-center gap-2">
                     <div className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
                     <span className="font-mono text-sm font-bold">Online</span>
                   </div>
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between text-[var(--text-primary)]">
                   <span className="font-mono text-sm">Avg Job Time</span>
                   <span className="font-mono text-sm font-bold">~2 min</span>
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between text-[var(--text-primary)]">
                   <span className="font-mono text-sm">Success Rate</span>
                   <span className="font-mono text-sm font-bold">
                     {stats && stats.total_jobs > 0
@@ -193,13 +193,13 @@ export default function DashboardPage() {
                       : "—"}
                   </span>
                 </div>
-                <div className="border-t-2 border-black pt-4">
-                  <div className="font-mono text-xs text-muted-foreground mb-2">Network TPS</div>
+                <div className="border-t-2 border-[var(--border-color)] pt-4">
+                  <div className="font-mono text-xs text-[var(--text-secondary)] mb-2">Network TPS</div>
                   <div className="flex items-end gap-1">
                     {[40, 65, 45, 80, 55, 70, 60, 75, 50, 85].map((h, i) => (
                       <div
                         key={i}
-                        className="flex-1 bg-black"
+                        className="flex-1 bg-[var(--text-primary)]"
                         style={{ height: `${h}%` }}
                       />
                     ))}
@@ -208,25 +208,25 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-2 border-yellow-400">
-              <CardHeader className="bg-yellow-400 text-black">
+            <Card className="border-2 border-[#f5c800]">
+              <CardHeader className="bg-[#f5c800] text-[var(--text-primary)]">
                 <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 pt-4">
                 <Link href="/wizard">
-                  <div className="flex items-center justify-between border-2 border-black p-3 font-mono text-sm font-bold hover:bg-black hover:text-white transition-colors cursor-pointer">
+                  <div className="flex items-center justify-between border-2 border-[var(--border-color)] p-3 font-mono text-sm font-bold hover:bg-[var(--bg-card)] hover:text-[var(--text-on-card)] transition-colors cursor-pointer text-[var(--text-primary)]">
                     <span>Submit Job</span>
                     <Zap className="h-4 w-4" />
                   </div>
                 </Link>
                 <Link href="/provider">
-                  <div className="flex items-center justify-between border-2 border-black p-3 font-mono text-sm font-bold hover:bg-black hover:text-white transition-colors cursor-pointer">
+                  <div className="flex items-center justify-between border-2 border-[var(--border-color)] p-3 font-mono text-sm font-bold hover:bg-[var(--bg-card)] hover:text-[var(--text-on-card)] transition-colors cursor-pointer text-[var(--text-primary)]">
                     <span>Register GPU</span>
                     <Cpu className="h-4 w-4" />
                   </div>
                 </Link>
                 <Link href="/explorer">
-                  <div className="flex items-center justify-between border-2 border-black p-3 font-mono text-sm font-bold hover:bg-black hover:text-white transition-colors cursor-pointer">
+                  <div className="flex items-center justify-between border-2 border-[var(--border-color)] p-3 font-mono text-sm font-bold hover:bg-[var(--bg-card)] hover:text-[var(--text-on-card)] transition-colors cursor-pointer text-[var(--text-primary)]">
                     <span>Explore Jobs</span>
                     <TrendingUp className="h-4 w-4" />
                   </div>
