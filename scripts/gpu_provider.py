@@ -340,7 +340,7 @@ def capture_container_logs(job_id: int) -> Optional[str]:
         try:
             with open(log_path, 'rb') as f:
                 response = requests.post(
-                    "http://localhost:5001/api/v0/add",
+                    "os.getenv("IPFS_API_URL", "http://localhost:5001/api/v0/add")",
                     files={'file': f},
                     timeout=30
                 )
@@ -611,7 +611,7 @@ def main():
             provider_info = registry.functions.providers(provider_address).call()
             if not provider_info[3]:  # isRegistered
                 log_warn("Provider NOT registered! Register via frontend first.")
-                log_warn("Visit: http://localhost:3000/provider/register")
+                log_warn("Visit: http://localhost:3003/provider/register")
             else:
                 log_success(f"Provider registered. Stake: {w3.from_wei(provider_info[2], 'ether')} XDC")
     except Exception as e:

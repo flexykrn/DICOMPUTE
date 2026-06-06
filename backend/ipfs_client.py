@@ -1,4 +1,6 @@
 """
+import random
+import time
 import os
 IPFS Client using Pinata for DICOMPUTE
 Handles file upload/download via Pinata IPFS service
@@ -28,7 +30,7 @@ class IPFSClient:
         """Upload file to IPFS via Pinata, return CID"""
         if not self.headers:
             print("Warning: No Pinata JWT configured, falling back to demo CID")
-            return "QmDemoUpload"
+            return os.getenv("IPFS_FALLBACK_CID", f"QmDemo{int(time.time())}{random.randint(1000,9999)}")
         
         try:
             with open(file_path, 'rb') as f:

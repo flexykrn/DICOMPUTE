@@ -630,6 +630,10 @@ async def get_job_result(job_id: int):
 @app.post("/api/jobs/{job_id}/logs")
 async def append_job_logs(job_id: int, data: dict = Body(...), db: Session = Depends(get_db)):
     """Append logs to a job (from provider daemon)"""
+    # Validate required fields
+    if not data.get("logs"):
+        raise HTTPException(status_code=400, detail="logs field is required")
+    
     job = db.query(Job).filter(Job.chain_job_id == job_id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
