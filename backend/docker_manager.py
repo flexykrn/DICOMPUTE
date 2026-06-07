@@ -16,7 +16,7 @@ class DockerContainerManager:
         self.active_containers: Dict[str, dict] = {}
         self.container_lock = threading.Lock()
     
-    def run_container(self, job_id: int, docker_uri: str, gpu_id: str = "0") -> Optional[str]:
+    def run_container(self, job_id: int, docker_uri: str, gpu_id: str = "0", dataset_cid: Optional[str] = None, expected_output: Optional[str] = None) -> Optional[str]:
         """Start a Docker container with GPU access (falls back to CPU if no GPU)"""
         container_name = f"nocap-job-{job_id}"
         
@@ -26,6 +26,16 @@ class DockerContainerManager:
             
             # Build Docker run command
             cmd = ["docker", "run", "-d", "--name", container_name, "-e", f"JOB_ID={job_id}"]
+            
+            # Add dataset mount if dataset_cid provided
+            if dataset_cid:
+                dataset_path = f"/tmp/dicompute-datasets/{dataset_cid}/data"
+                cmd.extend(["-v", f"{dataset_path}:/dataset:ro"])
+                cmd.extend(["-e", f"DATASET_CID={dataset_cid}"])
+            
+            # Add expected output env var if provided
+            if expected_output:
+                cmd.extend(["-e", f"EXPECTED_OUTPUT={expected_output}"])
             
             # Add GPU flag only if GPU is available
             if gpu_available:

@@ -25,6 +25,8 @@ class Job(Base):
     result_cid = Column(Text)
     instruction_count = Column(BigInteger)
     logs = Column(Text, nullable=True)  # Container logs/output
+    input_data_cid = Column(Text, nullable=True)  # IPFS CID for input dataset
+    expected_output = Column(Text, nullable=True)  # Expected output format/pattern
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

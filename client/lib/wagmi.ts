@@ -27,9 +27,8 @@ export const xdcApothem = defineChain({
 
 export const config = getDefaultConfig({
   appName: "DICOMPUTE",
-  projectId: "YOUR_WALLET_CONNECT_PROJECT_ID",
+  projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "21f16978fd430146fe7e908c6d64e8b7",
   chains: [xdcApothem],
-  ssr: true,
   transports: {
     [xdcApothem.id]: http(),
   },
@@ -37,4 +36,4 @@ export const config = getDefaultConfig({
 
 export const queryClient = new QueryClient();
 
-export { WagmiProvider, RainbowKitProvider, QueryClientProvider };
+export { RainbowKitProvider, WagmiProvider, QueryClient, QueryClientProvider };

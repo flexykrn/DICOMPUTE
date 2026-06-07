@@ -95,6 +95,7 @@ class JobResponse(BaseModel):
     last_heartbeat_block: Optional[int]
     result_cid: Optional[str]
     instruction_count: Optional[int]
+    logs: Optional[str] = None
     logs: Optional[str]
     created_at: str
 

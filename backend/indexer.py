@@ -373,14 +373,6 @@ class BlockchainIndexer:
         finally:
             db.close()
 
-# Global instance
-indexer = BlockchainIndexer()
-
-def run_indexer():
-    """Start the blockchain indexer"""
-    init_db()  # Ensure database is initialized
-    indexer.start()
-
     def _handle_heartbeat_received(self, event):
         """Handle HeartbeatReceived event"""
         args = event['args']
@@ -426,3 +418,11 @@ def run_indexer():
             print(f"  Provider DB error: {e}")
         finally:
             db.close()
+
+# Global instance
+indexer = BlockchainIndexer()
+
+def run_indexer():
+    """Start the blockchain indexer"""
+    init_db()  # Ensure database is initialized
+    indexer.start()

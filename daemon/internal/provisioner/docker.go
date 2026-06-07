@@ -239,9 +239,19 @@ func BuildContainerConfig(job *models.Job, dataPath string) *models.ContainerCon
 	inputDir := filepath.Join(dataPath, fmt.Sprintf("job_%d", job.ID), "input")
 	outputDir := filepath.Join(dataPath, fmt.Sprintf("job_%d", job.ID), "output")
 
+	// Build env vars including dataset CID and expected output
+	env := []string{}
+	if job.Spec.InputDataCid != "" {
+		env = append(env, fmt.Sprintf("DATASET_CID=%s", job.Spec.InputDataCid))
+	}
+	if job.Spec.ExpectedOutput != "" {
+		env = append(env, fmt.Sprintf("EXPECTED_OUTPUT=%s", job.Spec.ExpectedOutput))
+	}
+
 	return &models.ContainerConfig{
 		Image: job.Spec.DockerURI,
 		Cmd:   []string{"python", "-u", "train.py"}, // Default; override via metadata
+		Env:   env,
 		Mounts: []models.VolumeMount{
 			{Source: inputDir, Target: "/data/input", ReadOnly: true},
 			{Source: outputDir, Target: "/data/output", ReadOnly: false},
