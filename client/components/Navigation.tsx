@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { usePathname } from "next/navigation";
@@ -20,8 +19,6 @@ const navLinks = [
 export function Navigation() {
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
-  const [connected, setConnected] = useState(false);
-  const [walletAddress] = useState("0x71C7656EC7ab88b098defB751B7401B5f6d8976F");
   const { address } = useAccount();
   const { data: xdcBalance } = useBalance({ address, query: { enabled: !!address } });
 
@@ -75,38 +72,7 @@ export function Navigation() {
           >
             {theme === "dark" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </button>
-          {!connected ? (
-            <div
-              className="relative inline-flex"
-              onClickCapture={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                setConnected(true);
-              }}
-            >
-              <ConnectButton />
-            </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <span className="relative flex h-2 w-2 items-center justify-center">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-500 opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
-                </span>
-                <span className="font-mono text-[0.65rem] tracking-[0.25em] text-[var(--text-primary)]">
-                  CONNECTED
-                </span>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setConnected(false)}
-                className="rounded-[2px] bg-[#0a0a0a] px-3 py-1.5 font-mono text-[0.7rem] text-[#f5c800]"
-              >
-                {`${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`}
-              </button>
-            </div>
-          )}
+          <ConnectButton />
         </div>
       </div>
     </header>

@@ -8,26 +8,25 @@ type ThemeContextValue = {
   theme: Theme;
   setTheme: React.Dispatch<React.SetStateAction<Theme>>;
   toggleTheme: () => void;
+  mounted: boolean;
 };
 
 const STORAGE_KEY = "dicompute-theme";
 
 const ThemeContext = React.createContext<ThemeContextValue | null>(null);
 
-function getInitialTheme(): Theme {
-  if (typeof window === "undefined") {
-    return "light";
-  }
-
-  const storedTheme = window.localStorage.getItem(STORAGE_KEY);
-
-  return storedTheme === "dark" ? "dark" : "light";
-}
-
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = React.useState<Theme>(getInitialTheme);
+  const [theme, setTheme] = React.useState<Theme>("light"); // Always start with light for SSR
+  const [mounted, setMounted] = React.useState(false);
 
-  React.useLayoutEffect(() => {
+  React.useEffect(() => {
+    const storedTheme = window.localStorage.getItem(STORAGE_KEY);
+    const initialTheme = storedTheme === "dark" ? "dark" : "light";
+    setTheme(initialTheme);
+    setMounted(true);
+  }, []);
+
+  React.useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
     window.localStorage.setItem(STORAGE_KEY, theme);
   }, [theme]);
@@ -37,8 +36,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       theme,
       setTheme,
       toggleTheme: () => setTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark")),
+      mounted,
     }),
-    [theme]
+    [theme, mounted]
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

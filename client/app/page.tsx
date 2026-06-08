@@ -11,7 +11,7 @@ import { Footer } from "@/components/Footer";
 import { useTheme } from "@/context/ThemeContext";
 
 export default function Home() {
-  const { theme } = useTheme();
+  const { theme, mounted } = useTheme();
 
   return (
     <div className="flex min-h-screen flex-col bg-[var(--bg-primary)] text-[var(--text-primary)]">
@@ -50,9 +50,11 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="relative hidden h-[600px] items-center justify-center overflow-hidden pr-0 md:flex">
-                <GlobeGpu className="h-full w-full max-h-[560px] max-w-[560px]" isDark={theme === "dark"} />
-              </div>
+              {mounted && (
+                <div className="relative hidden h-[600px] items-center justify-center overflow-hidden pr-0 md:flex">
+                  <GlobeGpu className="h-full w-full max-h-[560px] max-w-[560px]" isDark={theme === "dark"} />
+                </div>
+              )}
             </div>
           </div>
         </section>
