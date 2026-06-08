@@ -1,95 +1,58 @@
-.env
-.env.deploy
+# Dependencies
 node_modules/
-artifacts/
-cache/
-typechain/
-typechain-types/
-/agents
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-/agent
-
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
-
-# testing
-/coverage
-
-# next.js
-/.next/
-client/dist/
-client/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (NEVER commit real secrets)
-.env
-.env.deploy
-.env.local
-client/.env.local
-backend/.env
-scripts/.env
-!.env.provider.example
-!.env.example
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-# python
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
-.Python
+.env
+.env.local
+.env.*.local
 
-# database
+# Build outputs
+.next/
+dist/
+build/
+*.egg-info/
+
+# Database
 *.db
+*.db-journal
 *.sqlite
 *.sqlite3
 
-# local docs (shared via WhatsApp, not in repo)
-DEMO-SETUP.md
-
-# ide
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
 
-# os
+# OS
+.DS_Store
 Thumbs.db
 
-# go binaries
-daemon/daemon
-*.exe
-/dist
-/tmp
+# Logs
+*.log
+logs/
+
+# Temporary
+tmp/
+temp/
+*.tmp
+
+# Go
 vendor/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Python
 venv/
-venv2/
-backend/venv/
-backend/venv2/
+.env/
+.venv/
+
+# Secrets (NEVER commit these)
+*.key
+*.secret
+*.token
+*.pem
+*.p12
+*.pfx
