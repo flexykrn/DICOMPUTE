@@ -56,3 +56,6 @@ venv/
 *.pem
 *.p12
 *.pfx
+venv2/
+tsconfig.tsbuildinfo
+daemon/daemon
