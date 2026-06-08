@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Activity, Cpu, Clock, Shield } from "lucide-react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://dicompute-backend.onrender.com";
 
 export function StatsBar() {
   const [stats, setStats] = useState({

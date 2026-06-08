@@ -16,7 +16,7 @@ import { Zap, ArrowLeft, Cpu, Upload } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://dicompute-backend.onrender.com";
 
 function WizardForm() {
   const searchParams = useSearchParams();

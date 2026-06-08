@@ -12,7 +12,7 @@ import { useReadContract } from "wagmi";
 import { JOB_ESCROW_ADDRESS, jobEscrowAbi } from "@/lib/contracts/JobEscrow";
 import { Loader2, ExternalLink, FileCheck, Download, Terminal } from "lucide-react";
 import { toast } from "sonner";
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://dicompute-backend.onrender.com";
 
 interface HeartbeatData {
   block_number: number;
@@ -160,7 +160,7 @@ export default function JobDetailPage() {
 
   // WebSocket for real-time heartbeats
   useEffect(() => {
-    const ws = new WebSocket(`ws://localhost:8001/ws/jobs/${jobId}`);
+    const ws = new WebSocket(`wss://dicompute-backend.onrender.com/ws/jobs/${jobId}`);
     
     ws.onopen = () => {
       console.log('WebSocket connected');

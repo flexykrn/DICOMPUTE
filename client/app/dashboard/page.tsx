@@ -8,7 +8,7 @@ import { Footer } from "@/components/Footer";
 import { Activity, Cpu, FileCheck, Zap, TrendingUp, Clock, Users } from "lucide-react";
 import Link from "next/link";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://dicompute-backend.onrender.com";
 
 interface Stats {
   total_jobs: number;

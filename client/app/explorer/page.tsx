@@ -9,7 +9,7 @@ import { Footer } from "@/components/Footer";
 import Link from "next/link";
 import { Search, Loader2 } from "lucide-react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://dicompute-backend.onrender.com";
 
 interface Job {
   chain_job_id: number;

@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { Cpu, Zap, Globe, ArrowRight, Play, Square, Activity } from "lucide-react";
 import Link from "next/link";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://dicompute-backend.onrender.com";
 const GPU_REGISTRY_ADDRESS = "0xCEf0f0E74e618A95Da97e1216F81d74eA01dE77C";
 
 const gpuRegistryAbi = [

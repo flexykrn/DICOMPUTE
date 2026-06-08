@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://dicompute-backend.onrender.com";
 
 export default function ReceiptDetailClient({ tokenId }: { tokenId: string }) {
   const [receipt, setReceipt] = useState<any>(null);
