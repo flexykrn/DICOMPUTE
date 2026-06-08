@@ -18,8 +18,7 @@ import { useSearchParams } from "next/navigation";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 
-function WizardContent() {
-  const { isConnected, address } = useAccount();
+function WizardForm() {
   const searchParams = useSearchParams();
 
   const selectedProvider = searchParams.get("provider");
@@ -108,15 +107,6 @@ function WizardContent() {
   const estimatedCostXdc = (Number(estimatedCost) / 1e18).toFixed(6);
 
   const handleSubmit = () => {
-    if (!isConnected) {
-      toast.info("Connect wallet first");
-      return;
-    }
-    if (!dockerUri.trim()) {
-      toast.error("Docker image URI is required");
-      return;
-    }
-
     const deposit = BigInt(estimatedCost);
     if (deposit <= 0n) {
       toast.error("Deposit must be greater than 0");
@@ -340,12 +330,6 @@ function WizardContent() {
                   <span className="font-mono text-xs">≈ XDC</span>
                   <span className="font-mono text-sm">{estimatedCostXdc} XDC</span>
                 </div>
-
-                {!isConnected && (
-                  <div className="border-2 border-[var(--accent)] bg-[var(--accent)] p-3 font-mono text-xs font-bold text-[var(--text-primary)]">
-                    Connect your wallet to submit.
-                  </div>
-                )}
               </CardContent>
             </Card>
 
@@ -391,7 +375,7 @@ export default function WizardPage() {
         <Footer />
       </div>
     }>
-      <WizardContent />
+      <WizardForm />
     </Suspense>
   );
 }
