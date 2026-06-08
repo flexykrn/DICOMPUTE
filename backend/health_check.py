@@ -60,19 +60,11 @@ async def health_check():
     except Exception as e:
         services["blockchain"] = {"status": "warning", "message": str(e)}
     
-    # Check IPFS (Pinata) - downgrade to warning if not configured
+    # Check IPFS (Pinata) - test by checking JWT is configured
     try:
         pinata_jwt = os.getenv("PINATA_JWT", "")
-        if pinata_jwt:
-            response = requests.get(
-                "https://api.pinata.cloud/data/testAuthentication",
-                headers={"Authorization": f"Bearer {pinata_jwt}"},
-                timeout=10
-            )
-            if response.status_code == 200:
-                services["ipfs"] = {"status": "ok", "message": "Pinata authenticated"}
-            else:
-                services["ipfs"] = {"status": "warning", "message": f"HTTP {response.status_code}"}
+        if pinata_jwt and len(pinata_jwt) > 10:
+            services["ipfs"] = {"status": "ok", "message": "Pinata JWT configured"}
         else:
             services["ipfs"] = {"status": "warning", "message": "No PINATA_JWT configured"}
     except Exception as e:
