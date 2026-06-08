@@ -24,7 +24,7 @@ app = FastAPI(title="DICOMPUTE API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:3001").split(","),
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -96,7 +96,6 @@ class JobResponse(BaseModel):
     result_cid: Optional[str]
     instruction_count: Optional[int]
     logs: Optional[str] = None
-    logs: Optional[str]
     created_at: str
 
 class ProviderResponse(BaseModel):
@@ -298,9 +297,14 @@ async def get_provider(address: str, db: Session = Depends(get_db)):
 async def list_receipts(
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
+    user: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
-    receipts = db.query(Receipt).order_by(Receipt.minted_at.desc()).offset((page - 1) * limit).limit(limit).all()
+    query = db.query(Receipt).order_by(Receipt.minted_at.desc())
+    if user:
+        query = query.filter(Receipt.user_address == user)
+    
+    receipts = query.offset((page - 1) * limit).limit(limit).all()
     return [
         {
             "id": r.id,

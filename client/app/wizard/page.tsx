@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useWatchContractEvent } from "wagmi";
 import { JOB_ESCROW_ADDRESS, jobEscrowAbi } from "@/lib/contracts/JobEscrow";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
@@ -38,6 +38,9 @@ function WizardContent() {
   const [datasetCid, setDatasetCid] = useState<string | null>(null);
   const [uploadingDataset, setUploadingDataset] = useState(false);
 
+  const [completedJobId, setCompletedJobId] = useState<number | null>(null);
+  const [receiptTokenId, setReceiptTokenId] = useState<number | null>(null);
+
   const {
     writeContract,
     isPending: isSubmitting,
@@ -49,6 +52,40 @@ function WizardContent() {
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
     hash,
   });
+
+  // Listen for JobCompleted events on the blockchain
+  useWatchContractEvent({
+    address: JOB_ESCROW_ADDRESS,
+    abi: jobEscrowAbi,
+    eventName: "JobCompleted",
+    onLogs(logs) {
+      for (const log of logs) {
+        const jobId = Number(log.args.jobId);
+        const payout = log.args.payout?.toString();
+        if (jobId) {
+          setCompletedJobId(jobId);
+          toast.success(`Job #${jobId} completed! Payout: ${payout} wei`);
+          // Fetch the receipt token ID from ProofReceipt contract
+          fetchReceiptForJob(jobId);
+        }
+      }
+    },
+  });
+
+  async function fetchReceiptForJob(jobId: number) {
+    try {
+      const res = await fetch(`${API_URL}/api/receipts?job_id=${jobId}`);
+      if (res.ok) {
+        const receipts = await res.json();
+        if (receipts.length > 0) {
+          setReceiptTokenId(receipts[0].token_id);
+          toast.success(`ProofReceipt NFT minted! Token ID: ${receipts[0].token_id}`);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to fetch receipt:", e);
+    }
+  }
 
   useEffect(() => {
     if (isConfirmed) {
@@ -315,6 +352,31 @@ function WizardContent() {
                 {hash && (
                   <div className="border-2 border-[var(--border-color)] bg-[var(--bg-secondary)] p-3 font-mono text-xs break-all text-[var(--text-primary)]">
                     TX HASH: {hash}
+                  </div>
+                )}
+
+                {isConfirmed && (
+                  <div className="border-2 border-green-500 bg-green-50 p-3">
+                    <div className="font-mono text-xs font-bold text-green-700">Job submitted on-chain!</div>
+                    <div className="font-mono text-xs text-green-600">Waiting for provider to claim...</div>
+                  </div>
+                )}
+
+                {completedJobId && (
+                  <div className="border-2 border-[#f5c800] bg-[#f5c800]/10 p-3">
+                    <div className="font-mono text-xs font-bold text-[var(--text-primary)]">
+                      ✅ Job #{completedJobId} completed!
+                    </div>
+                    {receiptTokenId && (
+                      <div className="font-mono text-xs text-[var(--text-primary)] mt-1">
+                        ProofReceipt NFT: Token #{receiptTokenId}
+                      </div>
+                    )}
+                    <Link href="/dashboard">
+                      <Button variant="outline" size="sm" className="mt-2">
+                        View in Dashboard →
+                      </Button>
+                    </Link>
                   </div>
                 )}
               </CardContent>

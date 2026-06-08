@@ -471,7 +471,7 @@ User Views Receipt at /receipts/{id}
    - Akash providers have rich dashboards
    - NoCapCompute `/provider/dashboard` can be enhanced
 
-### ✅ NoCapCompute's Unique Advantages:
+### ✅ NoCapCompute's Unique Advantages:`
 
 1. **ProofReceipt NFT** - Akash has no equivalent
 2. **EIP-712 Heartbeats** - Cryptographic proof of execution

@@ -1,7 +1,0 @@
-{
-  "/page": "app/page.js",
-  "/explorer/page": "app/explorer/page.js",
-  "/wizard/page": "app/wizard/page.js",
-  "/marketplace/page": "app/marketplace/page.js",
-  "/dashboard/page": "app/dashboard/page.js"
-}

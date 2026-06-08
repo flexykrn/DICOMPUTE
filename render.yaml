@@ -1,0 +1,43 @@
+# DICOMPUTE - Render Deployment Config
+# Paste this into render.com dashboard or use via Blueprint
+
+services:
+  # Backend API
+  - type: web
+    name: dicompute-backend
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: CORS_ORIGINS
+        value: "https://dicompute-frontend.onrender.com,http://localhost:3000"
+      - key: RPC_URL
+        value: "https://erpc.apothem.network"
+      - key: DATABASE_URL
+        value: "sqlite:///./dicompute.db"
+      # Add these in Render dashboard:
+      # - PRIVATE_KEY (for provider/scheduler)
+      # - PINATA_API_KEY
+      # - PINATA_SECRET_API_KEY
+    disk:
+      name: data
+      mountPath: /opt/render/project/src
+      sizeGB: 1
+
+  # Frontend (Next.js)
+  - type: web
+    name: dicompute-frontend
+    env: node
+    plan: free
+    buildCommand: "npm install && npm run build"
+    startCommand: "npm start"
+    envVars:
+      - key: NODE_VERSION
+        value: 20.11.0
+      - key: NEXT_PUBLIC_API_URL
+        value: "https://dicompute-backend.onrender.com"
+      - key: NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
+        # Add your WalletConnect Project ID in Render dashboard

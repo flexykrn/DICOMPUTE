@@ -7,6 +7,9 @@ import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Activity, Cpu, FileCheck, Zap, TrendingUp, Clock, Users } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
+import { useAccount, useWatchContractEvent } from "wagmi";
+import { PROOF_RECEIPT_ADDRESS, proofReceiptAbi } from "@/lib/contracts/ProofReceipt";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 
@@ -30,22 +33,36 @@ interface Job {
   created_at: string;
 }
 
+interface Receipt {
+  token_id: number;
+  job_id: number;
+  provider_address: string;
+  result_cid: string;
+  cost: string;
+}
+
 export default function DashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [recentJobs, setRecentJobs] = useState<Job[]>([]);
+  const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [loading, setLoading] = useState(true);
+  const { address } = useAccount();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [statsRes, jobsRes] = await Promise.all([
+        const [statsRes, jobsRes, receiptsRes] = await Promise.all([
           fetch(`${API_URL}/api/stats`),
           fetch(`${API_URL}/api/jobs?limit=10`),
+          address ? fetch(`${API_URL}/api/receipts?user=${address}`) : Promise.resolve(null),
         ]);
         if (statsRes.ok) setStats(await statsRes.json());
         if (jobsRes.ok) {
           const jobs = await jobsRes.json();
           setRecentJobs(jobs.slice(0, 5));
+        }
+        if (receiptsRes && receiptsRes.ok) {
+          setReceipts(await receiptsRes.json());
         }
       } catch (e) {
         console.error(e);
@@ -57,7 +74,21 @@ export default function DashboardPage() {
     fetchData();
     const interval = setInterval(fetchData, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [address]);
+
+  // Listen for new receipt mints
+  useWatchContractEvent({
+    address: PROOF_RECEIPT_ADDRESS,
+    abi: proofReceiptAbi,
+    eventName: "ReceiptMinted",
+    onLogs(logs) {
+      for (const log of logs) {
+        if (log.args.user === address) {
+          toast.success(`ProofReceipt NFT minted! Token #${log.args.tokenId}`);
+        }
+      }
+    },
+  });
 
   const statCards = stats ? [
     { label: "Total Jobs", value: stats.total_jobs, icon: FileCheck, color: "bg-blue-500" },
@@ -233,6 +264,25 @@ export default function DashboardPage() {
                 </Link>
               </CardContent>
             </Card>
+
+            {/* My Receipts */}
+            {address && receipts.length > 0 && (
+              <Card className="border-2 border-green-500">
+                <CardHeader className="bg-green-500 text-white">
+                  <CardTitle>My ProofReceipts</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 pt-4">
+                  {receipts.map((receipt) => (
+                    <div key={receipt.token_id} className="border-2 border-black p-3">
+                      <div className="font-mono text-xs font-bold">Token #{receipt.token_id}</div>
+                      <div className="font-mono text-xs text-muted-foreground">Job #{receipt.job_id}</div>
+                      <div className="font-mono text-xs break-all mt-1">CID: {receipt.result_cid}</div>
+                      <div className="font-mono text-xs text-green-600 mt-1">Cost: {(Number(receipt.cost) / 1e18).toFixed(6)} XDC</div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </main>

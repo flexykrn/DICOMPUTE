@@ -65,7 +65,7 @@ func Load() (*Config, error) {
 		DataVolumePath:    getEnv("DATA_VOLUME_PATH", "/var/lib/dicompute/data"),
 		DatabaseURL:       getEnv("DATABASE_URL", "postgres://dicompute:***@localhost:5432/dicompute?sslmode=disable"),
 		PinataJWT:         getEnv("PINATA_JWT", ""),
-		HeartbeatInterval: getEnvDuration("HEARTBEAT_INTERVAL", 30*time.Second),
+		PinataJWT:         getEnv("PINATA_JWT", ""),
 		HeartbeatCount:    getEnvInt("HEARTBEAT_COUNT", 6),
 		MaxCPUCores:       getEnvFloat64("MAX_CPU_CORES", 8),
 		MaxRAMGiB:         getEnvFloat64("MAX_RAM_GIB", 32),
