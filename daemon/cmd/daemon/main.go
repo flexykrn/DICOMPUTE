@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,10 +13,12 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"go.uber.org/zap"
 
+	"github.com/flexykrn/dicompute/daemon/internal/blockchain"
 	"github.com/flexykrn/dicompute/daemon/internal/config"
 	"github.com/flexykrn/dicompute/daemon/internal/db"
 	"github.com/flexykrn/dicompute/daemon/internal/heartbeat"
 	"github.com/flexykrn/dicompute/daemon/internal/indexer"
+	"github.com/flexykrn/dicompute/daemon/internal/ipfs"
 	"github.com/flexykrn/dicompute/daemon/internal/models"
 	"github.com/flexykrn/dicompute/daemon/internal/provisioner"
 	"github.com/flexykrn/dicompute/daemon/internal/watcher"
@@ -50,6 +53,22 @@ func main() {
 		zap.String("backend", cfg.BackendURL),
 		zap.String("rpc", cfg.RPCURL),
 	)
+
+	// Initialize blockchain client (NEW — for claimJob + submitResults)
+	var bcClient *blockchain.Client
+	if cfg.JobEscrowAddress != "" && cfg.PrivateKey != "" {
+		var errBC error
+		bcClient, errBC = blockchain.NewClient(cfg.RPCURL, cfg.JobEscrowAddress, cfg.PrivateKey, cfg.ChainID, logger)
+		if errBC != nil {
+			logger.Warn("blockchain client init failed, running without on-chain settlement", zap.Error(errBC))
+		} else {
+			logger.Info("blockchain client ready", zap.String("address", bcClient.Address().Hex()))
+			defer bcClient.Close()
+		}
+	}
+
+	// Initialize IPFS uploader (NEW — real uploads instead of mock CID)
+	ipfsUploader := ipfs.NewUploader(cfg.PinataJWT, logger)
 
 	// Initialize provisioner (Docker or Mock)
 	var prov Provisioner
@@ -110,6 +129,20 @@ func main() {
 			zap.String("image", assignment.DockerURI),
 		)
 
+		// CRITICAL FIX 1: Claim job on-chain BEFORE executing
+		if bcClient != nil {
+			chainJobID := big.NewInt(int64(assignment.ChainJobID))
+			logger.Info("claiming job on-chain", zap.Int64("chainJobID", chainJobID.Int64()))
+			_, err := bcClient.ClaimJob(ctx, chainJobID)
+			if err != nil {
+				logger.Error("claimJob failed, skipping job", zap.Error(err))
+				return fmt.Errorf("claimJob failed: %w", err)
+			}
+			logger.Info("job claimed on-chain successfully")
+		} else {
+			logger.Warn("no blockchain client, skipping claimJob")
+		}
+
 		// Build job model
 		job := &models.Job{
 			ID:          uint64(assignment.ID),
@@ -153,8 +186,8 @@ func main() {
 			logger.Warn("failed to report status", zap.Error(err))
 		}
 
-		// Start heartbeat loop
-		go runHeartbeatLoop(ctx, job, hbGen, hbSender, prov, backendClient, cfg, logger)
+		// Start heartbeat loop (with blockchain settlement)
+		go runHeartbeatLoop(ctx, job, hbGen, hbSender, prov, backendClient, bcClient, ipfsUploader, cfg, logger)
 
 		return nil
 	})
@@ -216,6 +249,8 @@ func runHeartbeatLoop(
 	hbSender *heartbeat.Sender,
 	prov Provisioner,
 	backendClient *watcher.BackendClient,
+	bcClient *blockchain.Client,
+	ipfsUploader *ipfs.Uploader,
 	cfg *config.Config,
 	logger *zap.Logger,
 ) {
@@ -299,18 +334,49 @@ func runHeartbeatLoop(
 		logger.Warn("failed to remove container", zap.Error(err))
 	}
 
-	// Report completion
+	// CRITICAL FIX 2: Upload logs to IPFS (real CID instead of mock)
+	var resultCID string
+	if ipfsUploader != nil && logs != "" {
+		var errIPFS error
+		resultCID, errIPFS = ipfsUploader.UploadText(ctx, logs, fmt.Sprintf("job-%d-logs.txt", job.ID))
+		if errIPFS != nil {
+			logger.Warn("IPFS upload failed, using fallback CID", zap.Error(errIPFS))
+			resultCID = fmt.Sprintf("QmFallback%d", time.Now().Unix())
+		}
+	} else {
+		resultCID = fmt.Sprintf("QmNoLogs%d", time.Now().Unix())
+	}
+
+	// CRITICAL FIX 3: Submit results on-chain (submitResults instead of just backend API)
+	if bcClient != nil {
+		chainJobID := big.NewInt(int64(job.ChainJobID))
+		instructionCount := big.NewInt(1000000) // TODO: count actual instructions
+		logger.Info("submitting results on-chain",
+			zap.Int64("chainJobID", chainJobID.Int64()),
+			zap.String("cid", resultCID),
+		)
+		_, err := bcClient.SubmitResults(ctx, chainJobID, resultCID, instructionCount)
+		if err != nil {
+			logger.Error("submitResults failed", zap.Error(err))
+		} else {
+			logger.Info("results submitted on-chain successfully")
+		}
+	} else {
+		logger.Warn("no blockchain client, skipping submitResults")
+	}
+
+	// Report completion to backend (for compatibility)
 	if err := backendClient.ReportJobStatus(ctx, job.ID, models.JobStateCompleted, "", logs); err != nil {
 		logger.Warn("failed to report completion", zap.Error(err))
 	}
 
-	// Submit result (mock CID)
-	if err := backendClient.SubmitResult(ctx, job.ID, "QmPyTorchTrainingDemo1234567890abcdef", 1000000); err != nil {
-		logger.Warn("failed to submit result", zap.Error(err))
+	// Submit result to backend (for compatibility)
+	if err := backendClient.SubmitResult(ctx, job.ID, resultCID, 1000000); err != nil {
+		logger.Warn("failed to submit result to backend", zap.Error(err))
 	}
 
 	logger.Info("job completed",
 		zap.Uint64("job_id", job.ID),
-		zap.String("result_cid", "QmPyTorchTrainingDemo1234567890abcdef"),
+		zap.String("result_cid", resultCID),
 	)
 }

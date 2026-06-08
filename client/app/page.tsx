@@ -36,17 +36,17 @@ export default function Home() {
                   Every heartbeat and result is cryptographically proven on-chain.
                 </p>
                 <div className="flex flex-wrap gap-4">
-                  <Link href="/wizard">
-                    <Button size="lg" className="gap-2">
+                  <Button asChild size="lg" className="gap-2">
+                    <Link href="/wizard">
                       Submit Job
                       <ArrowRight className="h-5 w-5" />
-                    </Button>
-                  </Link>
-                  <Link href="/explorer">
-                    <Button size="lg" variant="outline">
+                    </Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline">
+                    <Link href="/explorer">
                       Explore Jobs
-                    </Button>
-                  </Link>
+                    </Link>
+                  </Button>
                 </div>
               </div>
 

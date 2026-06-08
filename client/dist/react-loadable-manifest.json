@@ -950,7 +950,7 @@
   "node_modules\\@wagmi\\connectors\\dist\\esm\\metaMask.js -> @metamask/sdk": {
     "id": "node_modules\\@wagmi\\connectors\\dist\\esm\\metaMask.js -> @metamask/sdk",
     "files": [
-      "static/chunks/_app-pages-browser_node_modules_wagmi_connectors_node_modules_metamask_sdk_dist_browser_es_me-4aadea.js"
+      "static/chunks/_app-pages-browser_node_modules_metamask_sdk_dist_browser_es_metamask-sdk_js.js"
     ]
   },
   "node_modules\\@wagmi\\connectors\\dist\\esm\\porto.js -> porto": {

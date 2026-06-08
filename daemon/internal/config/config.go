@@ -18,30 +18,33 @@ type Config struct {
 	PrivateKey       string
 
 	// Backend API (M2)
-	BackendURL       string
-	BackendAPIKey    string
-	PollInterval     time.Duration
+	BackendURL    string
+	BackendAPIKey string
+	PollInterval  time.Duration
 
 	// Docker
-	DockerHost       string
-	DockerNetwork    string
-	DataVolumePath   string
+	DockerHost     string
+	DockerNetwork  string
+	DataVolumePath string
 
 	// Database (for indexer)
-	DatabaseURL      string
+	DatabaseURL string
+
+	// IPFS
+	PinataJWT string
 
 	// Heartbeat
 	HeartbeatInterval time.Duration
-	HeartbeatCount   int
+	HeartbeatCount    int
 
 	// Resources
-	MaxCPUCores      float64
-	MaxRAMGiB        float64
-	MaxVRAMGiB       float64
-	MockGPU          bool
+	MaxCPUCores float64
+	MaxRAMGiB   float64
+	MaxVRAMGiB  float64
+	MockGPU     bool
 
 	// Logging
-	LogLevel         string
+	LogLevel string
 }
 
 // Load reads configuration from environment variables
@@ -60,7 +63,8 @@ func Load() (*Config, error) {
 		DockerHost:        getEnv("DOCKER_HOST", "unix:///var/run/docker.sock"),
 		DockerNetwork:     getEnv("DOCKER_NETWORK", "dicompute"),
 		DataVolumePath:    getEnv("DATA_VOLUME_PATH", "/var/lib/dicompute/data"),
-		DatabaseURL:       getEnv("DATABASE_URL", "postgres://dicompute:dicompute@localhost:5432/dicompute?sslmode=disable"),
+		DatabaseURL:       getEnv("DATABASE_URL", "postgres://dicompute:***@localhost:5432/dicompute?sslmode=disable"),
+		PinataJWT:         getEnv("PINATA_JWT", ""),
 		HeartbeatInterval: getEnvDuration("HEARTBEAT_INTERVAL", 30*time.Second),
 		HeartbeatCount:    getEnvInt("HEARTBEAT_COUNT", 6),
 		MaxCPUCores:       getEnvFloat64("MAX_CPU_CORES", 8),

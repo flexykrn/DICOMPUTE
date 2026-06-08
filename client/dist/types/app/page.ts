@@ -1,4 +1,4 @@
-// File: D:\VMShare\nocap\DICOMPUTE\client\app\page.tsx
+// File: C:\Users\karan\Desktop\openscans\dicompute\client\app\page.tsx
 import * as entry from '../../../app/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
