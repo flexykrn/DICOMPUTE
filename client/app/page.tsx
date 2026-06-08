@@ -1,14 +1,21 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlobeGpu } from "@/components/ui/cobe-globe-gpu";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Link from "next/link";
-import { ArrowRight, Cpu, ShieldCheck, FileCheck } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { useTheme } from "@/context/ThemeContext";
+
+import { StatsBar } from "@/components/landing/StatsBar";
+import { WhyDiCompute } from "@/components/landing/WhyDiCompute";
+import { ProofReceipt } from "@/components/landing/ProofReceipt";
+import { HowItWorks } from "@/components/landing/HowItWorks";
+import { Pricing } from "@/components/landing/Pricing";
+import { Providers } from "@/components/landing/Providers";
+import { UseCases } from "@/components/landing/UseCases";
+import { CTA } from "@/components/landing/CTA";
 
 export default function Home() {
   const { theme, mounted } = useTheme();
@@ -51,85 +58,37 @@ export default function Home() {
               </div>
 
               {mounted && (
-                <div className="relative hidden h-[600px] items-center justify-center overflow-hidden pr-0 md:flex">
-                  <GlobeGpu className="h-full w-full max-h-[560px] max-w-[560px]" isDark={theme === "dark"} />
+                <div className="relative hidden h-[650px] items-center justify-center overflow-visible md:-ml-4 md:flex">
+                  <GlobeGpu className="h-full w-full" isDark={theme === "dark"} />
                 </div>
               )}
             </div>
           </div>
         </section>
 
-        {/* How it works */}
-        <section className="bg-[var(--bg-primary)]">
-          <div className="container mx-auto px-4 py-16">
-          <div className="mb-10 flex items-end justify-between border-b-2 border-[var(--border-color)] pb-4">
-            <h2 className="text-3xl font-black uppercase tracking-tight text-[var(--text-primary)] md:text-4xl">How It Works</h2>
-            <span className="hidden font-mono text-sm text-[var(--text-secondary)] md:block">NO TRUST REQUIRED</span>
-          </div>
+        {/* 1. Stats Bar */}
+        <StatsBar />
 
-          <div className="grid gap-6 md:grid-cols-3">
-            <Card>
-              <CardHeader className="flex-row items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center border-2 border-[var(--text-on-card)]">
-                  <Cpu className="h-5 w-5 text-[var(--text-on-card)]" />
-                </div>
-                <CardTitle>01 — Submit</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="font-mono text-sm leading-relaxed text-[var(--text-on-card)]">
-                  Configure your Docker image, CPU, RAM, and GPU requirements. Lock a deposit in
-                  the JobEscrow smart contract.
-                </p>
-              </CardContent>
-            </Card>
+        {/* 2. Why DiCompute */}
+        <WhyDiCompute />
 
-            <Card>
-              <CardHeader className="flex-row items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center border-2 border-[var(--text-on-card)]">
-                  <ShieldCheck className="h-5 w-5 text-[var(--text-on-card)]" />
-                </div>
-                <CardTitle>02 — Verify</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="font-mono text-sm leading-relaxed text-[var(--text-on-card)]">
-                  Providers claim jobs on-chain and send cryptographically signed heartbeats
-                  directly to the blockchain while your container runs.
-                </p>
-              </CardContent>
-            </Card>
+        {/* 3. ProofReceipt NFT */}
+        <ProofReceipt />
 
-            <Card>
-              <CardHeader className="flex-row items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center border-2 border-[var(--text-on-card)]">
-                  <FileCheck className="h-5 w-5 text-[var(--text-on-card)]" />
-                </div>
-                <CardTitle>03 — Prove</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="font-mono text-sm leading-relaxed text-[var(--text-on-card)]">
-                  Receive an ERC-721 ProofReceipt NFT with the result CID, instruction count,
-                  and cost — fully auditable on-chain.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-          </div>
-        </section>
+        {/* 4. How It Works */}
+        <HowItWorks />
 
-        {/* CTA */}
-        <section className="border-t-2 border-[var(--border-color)] bg-[var(--bg-secondary)]">
-          <div className="container mx-auto px-4 py-16">
-            <div className="flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
-              <div>
-                <h2 className="text-2xl font-black uppercase tracking-tight text-[var(--text-primary)]">Ready to compute?</h2>
-                <p className="mt-2 font-mono text-[var(--text-secondary)]">
-                  Connect your wallet and submit your first verifiable job.
-                </p>
-              </div>
-              <ConnectButton />
-            </div>
-          </div>
-        </section>
+        {/* 5. Pricing */}
+        <Pricing />
+
+        {/* 6. Top Providers */}
+        <Providers />
+
+        {/* 7. Use Cases */}
+        <UseCases />
+
+        {/* 8. CTA */}
+        <CTA />
       </main>
 
       <Footer />

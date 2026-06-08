@@ -21,6 +21,19 @@ const GPU_PROVIDER_NODES: GPUProviderNode[] = [
   { id: "gpu-india", location: [19.09, 72.87], region: "IN-MUM", jobs: 11 },
 ];
 
+// Arc connections between nodes for jumping lines
+const ARC_CONNECTIONS = [
+  { from: 0, to: 1 },   // US-EAST ↔ US-WEST
+  { from: 0, to: 2 },   // US-EAST ↔ EU
+  { from: 2, to: 3 },   // EU ↔ JP
+  { from: 3, to: 6 },   // JP ↔ SG
+  { from: 6, to: 7 },   // SG ↔ IN
+  { from: 0, to: 7 },   // US-EAST ↔ IN
+  { from: 1, to: 4 },   // US-WEST ↔ AU
+  { from: 2, to: 5 },   // EU ↔ BR
+  { from: 5, to: 0 },   // BR ↔ US-EAST
+];
+
 type GlobeGpuProps = {
   className?: string;
   isDark?: boolean;
@@ -62,10 +75,12 @@ function projectVector(
 export function GlobeGpu({ className, isDark = false }: GlobeGpuProps) {
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const containerRef = React.useRef<HTMLDivElement | null>(null);
+  const overlayCanvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const [dimensions, setDimensions] = React.useState({ width: 0, height: 0 });
   const [activeMarker, setActiveMarker] = React.useState<string | null>(null);
   const phiRef = React.useRef(0);
   const thetaRef = React.useRef(0.25);
+  const arcPhaseRef = React.useRef(0);
 
   React.useEffect(() => {
     const container = containerRef.current;
@@ -94,6 +109,7 @@ export function GlobeGpu({ className, isDark = false }: GlobeGpuProps) {
     };
   }, []);
 
+  // Main globe render
   React.useEffect(() => {
     const canvas = canvasRef.current;
 
@@ -121,12 +137,12 @@ export function GlobeGpu({ className, isDark = false }: GlobeGpuProps) {
       glowColor: isDark ? [0.15, 0.15, 0.15] : [0.96, 0.95, 0.94],
       arcColor: isDark ? [0.8, 0.8, 0.8] : [0.1, 0.1, 0.1],
       opacity: 1,
-      scale: 1,
-      markerElevation: 0.12,
+      scale: 1.05,
+      markerElevation: 0.02,
       markers: GPU_PROVIDER_NODES.map(({ id, location }) => ({
         id,
         location,
-        size: 0.09,
+        size: 0.06,
         color: [0.96, 0.8, 0],
       })),
     });
@@ -148,6 +164,106 @@ export function GlobeGpu({ className, isDark = false }: GlobeGpuProps) {
       globe.destroy();
     };
   }, [dimensions.height, dimensions.width, isDark]);
+
+  // Overlay canvas for jumping arc lines - REMOVED
+  /*
+  React.useEffect(() => {
+    const overlayCanvas = overlayCanvasRef.current;
+    const mainCanvas = canvasRef.current;
+
+    if (!overlayCanvas || !mainCanvas || dimensions.width === 0 || dimensions.height === 0) {
+      return;
+    }
+
+    const ctx = overlayCanvas.getContext("2d");
+    if (!ctx) return;
+
+    overlayCanvas.width = dimensions.width;
+    overlayCanvas.height = dimensions.height;
+
+    let animationFrame: number;
+
+    const renderArcs = () => {
+      ctx.clearRect(0, 0, dimensions.width, dimensions.height);
+
+      const currentPhi = phiRef.current;
+      const currentTheta = thetaRef.current;
+      arcPhaseRef.current += 0.02;
+      const phase = arcPhaseRef.current;
+
+      ARC_CONNECTIONS.forEach((connection, index) => {
+        const fromNode = GPU_PROVIDER_NODES[connection.from];
+        const toNode = GPU_PROVIDER_NODES[connection.to];
+
+        const fromProjected = projectVector(
+          locationToVector(fromNode.location),
+          dimensions.width,
+          dimensions.height,
+          currentPhi,
+          currentTheta,
+        );
+
+        const toProjected = projectVector(
+          locationToVector(toNode.location),
+          dimensions.width,
+          dimensions.height,
+          currentPhi,
+          currentTheta,
+        );
+
+        if (!fromProjected.visible || !toProjected.visible) return;
+
+        const fromX = fromProjected.x * dimensions.width;
+        const fromY = fromProjected.y * dimensions.height;
+        const toX = toProjected.x * dimensions.width;
+        const toY = toProjected.y * dimensions.height;
+
+        // Animated dash offset for jumping effect
+        const dashOffset = (phase + index * 0.5) % 3;
+        const opacity = 0.6 + 0.4 * Math.sin(phase * 2 + index);
+
+        ctx.beginPath();
+        ctx.moveTo(fromX, fromY);
+
+        // Curved arc
+        const midX = (fromX + toX) / 2;
+        const midY = (fromY + toY) / 2;
+        const curveOffset = -30 - Math.sin(phase + index) * 10;
+        ctx.quadraticCurveTo(midX + curveOffset, midY + curveOffset, toX, toY);
+
+        ctx.strokeStyle = `rgba(245, 200, 0, ${opacity})`;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 12]);
+        ctx.lineDashOffset = -dashOffset * 20;
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Glowing dots at endpoints
+        const dotPulse = 0.5 + 0.5 * Math.sin(phase * 3 + index * 1.5);
+
+        // From dot
+        ctx.beginPath();
+        ctx.arc(fromX, fromY, 2 + dotPulse, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(245, 200, 0, ${0.8 + dotPulse * 0.2})`;
+        ctx.fill();
+
+        // To dot
+        ctx.beginPath();
+        ctx.arc(toX, toY, 2 + dotPulse, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(245, 200, 0, ${0.8 + dotPulse * 0.2})`;
+        ctx.fill();
+      });
+
+      animationFrame = window.requestAnimationFrame(renderArcs);
+    };
+
+    renderArcs();
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+    };
+  }, [dimensions]);
+  */
 
   React.useEffect(() => {
     const canvas = canvasRef.current;
@@ -205,8 +321,13 @@ export function GlobeGpu({ className, isDark = false }: GlobeGpuProps) {
     <div ref={containerRef} className={`relative h-full w-full ${className ?? ""}`.trim()}>
       <canvas
         ref={canvasRef}
-        className="h-full w-full"
+        className="absolute inset-0 h-full w-full"
         aria-hidden="true"
+        style={{ display: "block", width: "100%", height: "100%" }}
+      />
+      <canvas
+        ref={overlayCanvasRef}
+        className="absolute inset-0 h-full w-full pointer-events-none"
         style={{ display: "block", width: "100%", height: "100%" }}
       />
 

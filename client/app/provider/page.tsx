@@ -305,8 +305,8 @@ export default function ProviderPage() {
               </CardContent>
             </Card>
 
-                <Card className="border-2 border-[#f5c800]">
-              <CardHeader className="bg-[#f5c800] text-[var(--text-primary)]">
+                <Card className="border-2 border-[var(--accent)]">
+              <CardHeader className="bg-[var(--accent)] text-[var(--text-primary)]">
                 <CardTitle>Why Provide?</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 pt-4 font-mono text-sm">

@@ -174,7 +174,7 @@ function WizardContent() {
 
         {/* Selected GPU Card */}
         {selectedGPU && (
-          <Card className="mb-6 border-2 border-[#f5c800] bg-[var(--bg-secondary)]">
+          <Card className="mb-6 border-2 border-[var(--accent)] bg-[var(--bg-secondary)]">
             <CardContent className="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between">
               <div className="flex items-center gap-4">
                 <div className="flex h-12 w-12 items-center justify-center border-2 border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-on-card)]">
@@ -190,9 +190,9 @@ function WizardContent() {
                   </div>
                 </div>
               </div>
-              <div className="text-right text-[var(--text-primary)]">
+                <div className="text-right text-[var(--text-primary)]">
                 <div className="font-mono text-xs text-[var(--text-secondary)]">PRICE</div>
-                <div className="text-2xl font-black text-green-600">
+                <div className="text-2xl font-black text-[var(--accent)]">
                   ${selectedPrice}/hr
                 </div>
               </div>
@@ -342,7 +342,7 @@ function WizardContent() {
                 </div>
 
                 {!isConnected && (
-                  <div className="border-2 border-black bg-yellow-400 p-3 font-mono text-xs font-bold text-black">
+                  <div className="border-2 border-[var(--accent)] bg-[var(--accent)] p-3 font-mono text-xs font-bold text-[var(--text-primary)]">
                     Connect your wallet to submit.
                   </div>
                 )}

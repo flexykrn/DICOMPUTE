@@ -126,7 +126,7 @@ export default function MarketplacePage() {
         <section className="border-b-2 border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-on-card)]">
           <div className="container mx-auto px-4 py-16 md:py-24">
             <div className="max-w-4xl">
-              <div className="mb-4 inline-block border-2 border-yellow-400 bg-yellow-400 px-3 py-1 font-mono text-xs font-bold uppercase tracking-widest text-black">
+              <div className="mb-4 inline-block border-2 border-[var(--accent)] bg-[var(--accent)] px-3 py-1 font-mono text-xs font-bold uppercase tracking-widest text-[var(--text-primary)]">
                 GPU Marketplace
               </div>
               <h1 className="mb-4 text-4xl font-black uppercase leading-[0.9] tracking-tighter md:text-6xl">
@@ -140,15 +140,15 @@ export default function MarketplacePage() {
               </p>
                 <div className="flex flex-wrap gap-6 font-mono text-sm text-[var(--text-on-card)]">
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-yellow-400" />
+                  <CheckCircle className="h-4 w-4 text-[var(--accent)]" />
                   <span>{activeProviders.length} GPUs Available</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-yellow-400" />
+                  <CheckCircle className="h-4 w-4 text-[var(--accent)]" />
                   <span>{totalVRAM} GB Total VRAM</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-yellow-400" />
+                  <CheckCircle className="h-4 w-4 text-[var(--accent)]" />
                   <span>From ${avgPrice.toFixed(2)}/hr</span>
                 </div>
               </div>
@@ -244,7 +244,7 @@ export default function MarketplacePage() {
                       variant={provider.available ? "default" : "secondary"}
                       className={
                         provider.available
-                          ? "bg-green-500 text-white border-none"
+                          ? "bg-[var(--accent)] text-[var(--text-primary)] border-none"
                           : ""
                       }
                     >
@@ -277,7 +277,7 @@ export default function MarketplacePage() {
                   {/* Reputation */}
                   <div className="flex items-center justify-between text-[var(--text-primary)]">
                     <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      <Star className="h-4 w-4 fill-[var(--accent)] text-[var(--accent)]" />
                       <span className="font-mono font-bold">{provider.reputation}</span>
                       <span className="font-mono text-xs text-[var(--text-secondary)]">
                         ({provider.total_jobs_completed} jobs)
@@ -293,7 +293,7 @@ export default function MarketplacePage() {
                   <div className="flex items-center justify-between border-t-2 border-[var(--border-color)] pt-4 text-[var(--text-primary)]">
                     <div>
                       <div className="font-mono text-xs text-[var(--text-secondary)]">PRICE</div>
-                      <div className="text-2xl font-black text-green-600">
+                      <div className="text-2xl font-black text-[var(--accent)]">
                         ${provider.price_per_hour?.toFixed(2)}/hr
                       </div>
                     </div>
@@ -316,7 +316,7 @@ export default function MarketplacePage() {
           </div>
 
           {/* Call to action for providers */}
-          <div className="mt-12 border-2 border-[var(--border-color)] bg-[#f5c800] p-6">
+          <div className="mt-12 border-2 border-[var(--border-color)] bg-[var(--accent)] p-6">
             <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
               <div className="text-[var(--text-primary)]">
                 <h3 className="text-2xl font-black uppercase tracking-tight">Have a GPU?</h3>

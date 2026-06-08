@@ -43,7 +43,7 @@ export function Navigation() {
                 href={link.href}
                 className={`px-3 py-2 text-xs font-bold tracking-wide border-2 transition-all ${
                   active
-                    ? "border-[var(--text-primary)] bg-[var(--text-primary)] text-[var(--bg-primary)]"
+                    ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--text-primary)]"
                     : "border-transparent text-[var(--text-primary)] hover:border-[var(--border-color)] hover:bg-[var(--bg-secondary)]"
                 }`}
               >
