@@ -57,7 +57,7 @@ func Load() (*Config, error) {
 		ChainID:           getEnvInt64("CHAIN_ID", 51),
 		JobEscrowAddress:  getEnv("JOB_ESCROW_ADDRESS", ""),
 		PrivateKey:        getEnv("PROVIDER_PRIVATE_KEY", ""),
-		BackendURL:        getEnv("BACKEND_URL", "http://localhost:8000"),
+		BackendURL:        getEnv("BACKEND_URL", "http://localhost:8001"),
 		BackendAPIKey:     getEnv("BACKEND_API_KEY", ""),
 		PollInterval:      getEnvDuration("POLL_INTERVAL", 5*time.Second),
 		DockerHost:        getEnv("DOCKER_HOST", "unix:///var/run/docker.sock"),
