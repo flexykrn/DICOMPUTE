@@ -24,11 +24,15 @@ app = FastAPI(title="DICOMPUTE API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=os.getenv("CORS_ORIGINS", "*").split(","),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Import and register health check routes
+from health_check import router as health_router
+app.include_router(health_router)
 
 @app.on_event("startup")
 async def startup():
