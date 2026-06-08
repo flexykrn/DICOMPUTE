@@ -43,7 +43,7 @@ export default function ProviderPage() {
   const [provider, setProvider] = useState<ProviderData | null>(null);
   const [providers, setProviders] = useState<ProviderData[]>([]);
   const [providerRunning, setProviderRunning] = useState(false);
-  const [stakeAmount, setStakeAmount] = useState("10");
+  const [stakeAmount, setStakeAmount] = useState("0.1");
   const [gpuName, setGpuName] = useState("NVIDIA RTX 4090");
 
   const {
@@ -100,6 +100,8 @@ export default function ProviderPage() {
       functionName: "registerProvider",
       args: [stake, gpuName],
       value: stake,
+      gas: BigInt(500000),
+      maxFeePerGas: BigInt(50000000000), // 50 gwei max
     });
   };
 
