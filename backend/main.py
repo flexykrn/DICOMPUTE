@@ -26,6 +26,20 @@ logger.info("Database initialized")
 
 app = FastAPI(title="DICOMPUTE API", version="1.0.0")
 
+# Root route - API info
+@app.get("/")
+async def root():
+    return {
+        "status": "online",
+        "service": "DiCompute API",
+        "version": "1.0.0",
+        "endpoints": {
+            "health": "/health",
+            "docs": "/docs",
+            "redoc": "/redoc"
+        }
+    }
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=os.getenv("CORS_ORIGINS", "https://dicompute.onrender.com,https://dicompute-frontend.onrender.com,http://localhost:3000").split(","),
