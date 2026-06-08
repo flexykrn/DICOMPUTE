@@ -7,31 +7,6 @@ export const jobEscrowAbi = [
     type: "error",
   },
   {
-    inputs: [],
-    name: "InvalidJobId",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "JobNotPending",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "JobNotActive",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "ProviderNotRegistered",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "ResultsNotSubmitted",
-    type: "error",
-  },
-  {
     anonymous: false,
     inputs: [
       {
@@ -54,106 +29,6 @@ export const jobEscrowAbi = [
       },
     ],
     name: "JobSubmitted",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "uint256",
-        name: "jobId",
-        type: "uint256",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "provider",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "startedAt",
-        type: "uint256",
-      },
-    ],
-    name: "JobClaimed",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "uint256",
-        name: "jobId",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "string",
-        name: "resultCID",
-        type: "string",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "instructionCount",
-        type: "uint256",
-      },
-    ],
-    name: "ResultsSubmitted",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "uint256",
-        name: "jobId",
-        type: "uint256",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "provider",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "payout",
-        type: "uint256",
-      },
-    ],
-    name: "JobCompleted",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "uint256",
-        name: "jobId",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "blockNumber",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "uptimeSeconds",
-        type: "uint256",
-      },
-    ],
-    name: "HeartbeatReceived",
     type: "event",
   },
   {
@@ -267,68 +142,6 @@ export const jobEscrowAbi = [
       },
     ],
     stateMutability: "payable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "jobId",
-        type: "uint256",
-      },
-    ],
-    name: "claimJob",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "jobId",
-        type: "uint256",
-      },
-      {
-        internalType: "string",
-        name: "resultCID",
-        type: "string",
-      },
-      {
-        internalType: "uint256",
-        name: "instructionCount",
-        type: "uint256",
-      },
-    ],
-    name: "submitResults",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "jobId",
-        type: "uint256",
-      },
-    ],
-    name: "cancelJob",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "jobId",
-        type: "uint256",
-      },
-    ],
-    name: "challengeProvider",
-    outputs: [],
-    stateMutability: "nonpayable",
     type: "function",
   },
 ] as const;

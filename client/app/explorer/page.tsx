@@ -8,8 +8,6 @@ import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import Link from "next/link";
 import { Search, Loader2 } from "lucide-react";
-import { useWatchContractEvent } from "wagmi";
-import { JOB_ESCROW_ADDRESS, jobEscrowAbi } from "@/lib/contracts/JobEscrow";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 
@@ -56,8 +54,6 @@ export default function ExplorerPage() {
   const [filter, setFilter] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const [refreshKey, setRefreshKey] = useState(0);
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -77,25 +73,7 @@ export default function ExplorerPage() {
     fetchData();
     const interval = setInterval(fetchData, 5000);
     return () => clearInterval(interval);
-  }, [refreshKey]);
-
-  useWatchContractEvent({
-    address: JOB_ESCROW_ADDRESS,
-    abi: jobEscrowAbi,
-    eventName: "JobCompleted",
-    onLogs() {
-      setRefreshKey(k => k + 1);
-    },
-  });
-
-  useWatchContractEvent({
-    address: JOB_ESCROW_ADDRESS,
-    abi: jobEscrowAbi,
-    eventName: "JobClaimed",
-    onLogs() {
-      setRefreshKey(k => k + 1);
-    },
-  });
+  }, []);
 
   const filteredJobs = filter ? jobs.filter((j) => j.state === filter) : jobs;
 

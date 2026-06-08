@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GlobeGpu } from "@/components/ui/cobe-globe-gpu";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { ArrowRight, Cpu, ShieldCheck, FileCheck } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
@@ -12,7 +12,6 @@ import { useTheme } from "@/context/ThemeContext";
 
 export default function Home() {
   const { theme, mounted } = useTheme();
-  const router = useRouter();
 
   return (
     <div className="flex min-h-screen flex-col bg-[var(--bg-primary)] text-[var(--text-primary)]">
@@ -37,13 +36,17 @@ export default function Home() {
                   Every heartbeat and result is cryptographically proven on-chain.
                 </p>
                 <div className="flex flex-wrap gap-4">
-                  <Button size="lg" className="gap-2" onClick={() => router.push("/wizard")}>
-                    Submit Job
-                    <ArrowRight className="h-5 w-5" />
-                  </Button>
-                  <Button size="lg" variant="outline" onClick={() => router.push("/explorer")}>
-                    Explore Jobs
-                  </Button>
+                  <Link href="/wizard">
+                    <Button size="lg" className="gap-2">
+                      Submit Job
+                      <ArrowRight className="h-5 w-5" />
+                    </Button>
+                  </Link>
+                  <Link href="/explorer">
+                    <Button size="lg" variant="outline">
+                      Explore Jobs
+                    </Button>
+                  </Link>
                 </div>
               </div>
 
