@@ -13,8 +13,14 @@ from models import Job, Provider, Receipt
 import json
 import os
 
-# XDC Apothem RPC
-XDC_RPC = os.getenv("RPC_URL", "https://erpc.apothem.network")
+# XDC Apothem RPC - try multiple endpoints
+RPC_ENDPOINTS = [
+    os.getenv("RPC_URL", "https://erpc.apothem.network"),
+    "https://rpc.apothem.network",
+    "https://apothem.xdcrpc.com",
+]
+
+XDC_RPC = RPC_ENDPOINTS[0]
 
 # Contract addresses (update after deployment)
 JOB_ESCROW_ADDRESS = os.getenv("JOB_ESCROW_ADDRESS", "0x2Ff9B760510fc0aAd51a59f8aDA62F8B2631a075")
@@ -22,20 +28,29 @@ PROOF_RECEIPT_ADDRESS = os.getenv("PROOF_RECEIPT_ADDRESS", "0xb35EfE4E7071B1c7ce
 
 class BlockchainIndexer:
     def __init__(self):
-        self.w3 = Web3(Web3.HTTPProvider(XDC_RPC))
+        self.w3 = None
         self.running = False
         self.thread = None
         self.last_indexed_block = None
         self.deployment_block = 82731250
         
+        # Try multiple RPC endpoints
+        for rpc in RPC_ENDPOINTS:
+            try:
+                w3 = Web3(Web3.HTTPProvider(rpc, request_kwargs={'timeout': 10}))
+                if w3.is_connected():
+                    self.w3 = w3
+                    print(f" Connected to XDC Apothem via {rpc} (Block: {w3.eth.block_number})")
+                    break
+            except Exception as e:
+                print(f" Failed to connect via {rpc}: {e}")
+        
+        if not self.w3:
+            print(" Failed to connect to any XDC Apothem endpoint")
+        
         # Load ABIs - try file first, fallback to inline
         self.job_escrow_abi = self._load_abi("JobEscrow.json") or self._load_job_escrow_fallback_abi()
         self.proof_receipt_abi = self._load_abi("ProofReceipt.json") or self._load_proof_receipt_fallback_abi()
-        
-        if self.w3.is_connected():
-            print(f" Connected to XDC Apothem (Block: {self.w3.eth.block_number})")
-        else:
-            print(" Failed to connect to XDC Apothem")
     
     def _load_abi(self, filename: str):
         """Load contract ABI from file"""
@@ -137,7 +152,7 @@ class BlockchainIndexer:
     
     def _index_events(self):
         """Index new blockchain events"""
-        if not self.w3.is_connected():
+        if not self.w3 or not self.w3.is_connected():
             print(" Not connected to blockchain")
             return
         
