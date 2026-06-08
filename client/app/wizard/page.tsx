@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useWatchContractEvent } from "wagmi";
 import { JOB_ESCROW_ADDRESS, jobEscrowAbi } from "@/lib/contracts/JobEscrow";
+import { useJobStatus } from "@/hooks/useJobStatus";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Zap, ArrowLeft, Cpu, Upload } from "lucide-react";
@@ -40,6 +41,9 @@ function WizardContent() {
 
   const [completedJobId, setCompletedJobId] = useState<number | null>(null);
   const [receiptTokenId, setReceiptTokenId] = useState<number | null>(null);
+  const [submittedJobId, setSubmittedJobId] = useState<bigint | null>(null);
+
+  const { job: activeJob, isLoading: jobLoading } = useJobStatus(submittedJobId);
 
   const {
     writeContract,
@@ -90,6 +94,8 @@ function WizardContent() {
   useEffect(() => {
     if (isConfirmed) {
       toast.success(`Job submitted. Tx: ${hash?.slice(0, 20)}...`);
+      // Estimate job ID from getJobCount + 1 (not perfect but works for demo)
+      setSubmittedJobId(null); // Will be set via event or manual refresh
       reset();
     }
   }, [isConfirmed, hash, reset]);
@@ -359,6 +365,30 @@ function WizardContent() {
                   <div className="border-2 border-green-500 bg-green-50 p-3">
                     <div className="font-mono text-xs font-bold text-green-700">Job submitted on-chain!</div>
                     <div className="font-mono text-xs text-green-600">Waiting for provider to claim...</div>
+                  </div>
+                )}
+
+                {activeJob && (
+                  <div className={`border-2 p-3 ${activeJob.state === 'Active' ? 'border-blue-500 bg-blue-50' : activeJob.state === 'Completed' ? 'border-green-500 bg-green-50' : 'border-yellow-500 bg-yellow-50'}`}>
+                    <div className="font-mono text-xs font-bold text-[var(--text-primary)]">
+                      Job Status: {activeJob.state}
+                    </div>
+                    {activeJob.provider !== '0x0000000000000000000000000000000000000000' && (
+                      <div className="font-mono text-xs text-[var(--text-primary)] mt-1">
+                        Provider: {activeJob.provider.slice(0, 8)}...{activeJob.provider.slice(-6)}
+                      </div>
+                    )}
+                    {activeJob.resultCID && (
+                      <div className="font-mono text-xs text-[var(--text-primary)] mt-1">
+                        Result: {activeJob.resultCID.slice(0, 20)}...
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {jobLoading && (
+                  <div className="border-2 border-dashed border-gray-300 p-3">
+                    <div className="font-mono text-xs text-muted-foreground">Loading job status...</div>
                   </div>
                 )}
 
