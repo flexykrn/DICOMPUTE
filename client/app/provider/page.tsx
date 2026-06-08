@@ -17,7 +17,6 @@ const GPU_REGISTRY_ADDRESS = "0xCEf0f0E74e618A95Da97e1216F81d74eA01dE77C";
 const gpuRegistryAbi = [
   {
     inputs: [
-      { internalType: "uint256", name: "stake", type: "uint256" },
       { internalType: "string", name: "metadataURI", type: "string" },
     ],
     name: "registerProvider",
@@ -98,7 +97,7 @@ export default function ProviderPage() {
       address: GPU_REGISTRY_ADDRESS,
       abi: gpuRegistryAbi,
       functionName: "registerProvider",
-      args: [stake, gpuName],
+      args: [gpuName],
       value: stake,
       gas: BigInt(500000),
       maxFeePerGas: BigInt(50000000000), // 50 gwei max
