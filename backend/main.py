@@ -82,9 +82,9 @@ async def startup():
 class HeartbeatCreate(BaseModel):
     block_number: int
     uptime_seconds: int
-    cpu_percent: int
-    ram_percent: int
-    vram_percent: int
+    cpu_percent: float  # Allow float from daemon
+    ram_percent: float
+    vram_percent: float
     signature: str
     digest: str
 
