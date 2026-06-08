@@ -11,7 +11,7 @@ services:
     staticPublishPath: client/dist
     envVars:
       - key: NEXT_PUBLIC_API_URL
-        value: /api
+        value: https://dicompute-backend.onrender.com
       - key: NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID
         value: 21f16978fd430146fe7e908c6d64e8b7
       - key: NEXT_PUBLIC_JOB_ESCROW_ADDRESS
@@ -29,7 +29,7 @@ services:
     routes:
       - type: rewrite
         source: /api/*
-        destination: https://dicompute-api.onrender.com/api/*
+        destination: https://dicompute-backend.onrender.com/api/*
 
   # Backend API — Web Service (Free)
   - type: web
@@ -44,7 +44,7 @@ services:
       - key: PORT
         value: "8001"
       - key: CORS_ORIGINS
-        value: "https://dicompute-frontend.onrender.com,http://localhost:3000"
+        value: "https://dicompute.onrender.com,https://dicompute-frontend.onrender.com,http://localhost:3000"
       - key: RPC_URL
         value: https://erpc.apothem.network
       - key: CHAIN_ID

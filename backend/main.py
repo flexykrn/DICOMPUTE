@@ -20,11 +20,15 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
+# Initialize database on module load (before imports that use it)
+init_db()
+logger.info("Database initialized")
+
 app = FastAPI(title="DICOMPUTE API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv("CORS_ORIGINS", "*").split(","),
+    allow_origins=os.getenv("CORS_ORIGINS", "https://dicompute.onrender.com,https://dicompute-frontend.onrender.com,http://localhost:3000").split(","),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -36,7 +40,6 @@ app.include_router(health_router)
 
 @app.on_event("startup")
 async def startup():
-    init_db()
     # Start blockchain indexer
     from indexer import run_indexer
     import threading

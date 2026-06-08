@@ -39,43 +39,52 @@ async def health_check():
     except Exception as e:
         services["database"] = {"status": "error", "message": str(e)}
     
-    # Check blockchain RPC
+    # Check blockchain RPC (use longer timeout, downgrade errors to warning)
     try:
         rpc_url = os.getenv("RPC_URL", "https://erpc.apothem.network")
         response = requests.post(
             rpc_url,
             json={"jsonrpc": "2.0", "method": "eth_blockNumber", "params": [], "id": 1},
-            timeout=5
+            headers={"Content-Type": "application/json"},
+            timeout=15
         )
         if response.status_code == 200:
-            block_num = int(response.json().get("result", "0x0"), 16)
-            services["blockchain"] = {"status": "ok", "message": f"Block #{block_num}"}
+            result = response.json()
+            if "result" in result:
+                block_num = int(result["result"], 16)
+                services["blockchain"] = {"status": "ok", "message": f"Block #{block_num}"}
+            else:
+                services["blockchain"] = {"status": "warning", "message": "Unexpected RPC response"}
         else:
-            services["blockchain"] = {"status": "error", "message": f"HTTP {response.status_code}"}
+            services["blockchain"] = {"status": "warning", "message": f"HTTP {response.status_code}"}
     except Exception as e:
-        services["blockchain"] = {"status": "error", "message": str(e)}
+        services["blockchain"] = {"status": "warning", "message": str(e)}
     
-    # Check IPFS (Pinata)
+    # Check IPFS (Pinata) - downgrade to warning if not configured
     try:
         pinata_jwt = os.getenv("PINATA_JWT", "")
         if pinata_jwt:
             response = requests.get(
                 "https://api.pinata.cloud/data/testAuthentication",
                 headers={"Authorization": f"Bearer {pinata_jwt}"},
-                timeout=5
+                timeout=10
             )
             if response.status_code == 200:
                 services["ipfs"] = {"status": "ok", "message": "Pinata authenticated"}
             else:
-                services["ipfs"] = {"status": "error", "message": f"HTTP {response.status_code}"}
+                services["ipfs"] = {"status": "warning", "message": f"HTTP {response.status_code}"}
         else:
             services["ipfs"] = {"status": "warning", "message": "No PINATA_JWT configured"}
     except Exception as e:
-        services["ipfs"] = {"status": "error", "message": str(e)}
+        services["ipfs"] = {"status": "warning", "message": str(e)}
     
-    # Overall status
-    any_error = any(s["status"] == "error" for s in services.values())
-    status = "degraded" if any_error else "healthy"
+    # Overall status: only mark degraded if database or API has errors
+    critical_errors = any(
+        s["status"] == "error" 
+        for name, s in services.items() 
+        if name in ("api", "database")
+    )
+    status = "healthy" if not critical_errors else "degraded"
     
     return HealthStatus(
         status=status,
