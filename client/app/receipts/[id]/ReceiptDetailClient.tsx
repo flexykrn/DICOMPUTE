@@ -6,15 +6,26 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 
 export default function ReceiptDetailClient({ tokenId }: { tokenId: string }) {
   const [receipt, setReceipt] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch(`${API_URL}/api/receipts/${tokenId}`)
-      .then(r => r.json())
-      .then(setReceipt)
-      .catch(console.error);
+      .then(r => {
+        if (!r.ok) throw new Error("Receipt not found");
+        return r.json();
+      })
+      .then(data => {
+        setReceipt(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
   }, [tokenId]);
 
-  if (!receipt) return <div className="p-8">Loading receipt {tokenId}...</div>;
+  if (loading) return <div className="p-8">Loading receipt {tokenId}...</div>;
+  if (!receipt) return <div className="p-8">Receipt #{tokenId} not found</div>;
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
