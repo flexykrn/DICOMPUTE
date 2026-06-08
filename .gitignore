@@ -24,6 +24,7 @@ typechain-types/
 
 # next.js
 /.next/
+client/dist/
 client/.next/
 /out/
 
