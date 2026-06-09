@@ -254,28 +254,32 @@ export default function JobDetailPage() {
               <CardHeader className="bg-black text-white">
                 <div className="flex items-center gap-2">
                   <Terminal className="h-5 w-5" />
-                  <CardTitle>Training Logs</CardTitle>
+                  <CardTitle>Container Logs</CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="bg-black p-4 font-mono text-xs text-green-400 overflow-x-auto max-h-96 overflow-y-auto">
-                  <pre className="whitespace-pre-wrap">{`Loading dataset...
-Dataset loaded: 50000 training samples, 10000 validation samples
-Initializing model: ResNet50
-Model initialized. Parameters: 25,557,032
-Starting training...
-Epoch 1/10: loss=0.8234, accuracy=0.7123, val_loss=0.8121, val_accuracy=0.7234
-Epoch 2/10: loss=0.6543, accuracy=0.7654, val_loss=0.6432, val_accuracy=0.7765
-Epoch 3/10: loss=0.5432, accuracy=0.8123, val_loss=0.5321, val_accuracy=0.8234
-Epoch 4/10: loss=0.4321, accuracy=0.8567, val_loss=0.4210, val_accuracy=0.8678
-Epoch 5/10: loss=0.3456, accuracy=0.8901, val_loss=0.3345, val_accuracy=0.9012
-${job.state === "completed" ? `Training completed!
-Saving model to /output/model.pkl...
-Model saved.
-Saving weights to /output/weights.pth...
-Weights saved.
-Uploading results to IPFS...
-Results uploaded: ${job.result_cid || "QmTrainingResult"}` : "Training in progress..."}`}</pre>
+                  {job.logs ? (
+                    <pre className="whitespace-pre-wrap">{job.logs}</pre>
+                  ) : (
+                    <div className="text-yellow-400">
+                      <p className="mb-2"># Container execution logs will appear here</p>
+                      <p className="mb-2"># when running with real Docker + GPU</p>
+                      <p className="mb-2">#</p>
+                      <p className="mb-2"># Current mode: MOCK (simulated execution)</p>
+                      <p className="mb-2">#</p>
+                      <p className="text-green-400">$ docker run {job.docker_uri}</p>
+                      <p className="text-gray-400">[Mock] Pulling image...</p>
+                      <p className="text-gray-400">[Mock] Creating container...</p>
+                      <p className="text-gray-400">[Mock] Starting container...</p>
+                      {job.state === "completed" && (
+                        <>
+                          <p className="text-green-400 mt-2">[Mock] Job completed successfully</p>
+                          <p className="text-green-400">[Mock] Result CID: {job.result_cid || "Qm..."}</p>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
